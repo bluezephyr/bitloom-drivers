@@ -7,14 +7,16 @@ ROOT   := ../
 
 SRC    := test_main.c \
 	  test_ssd1306.c \
-	  ssd1306.c
+	  ssd1306.c \
+	  ssd1306_mock.c
 
 
 # Include directories
 INC    := include \
-	  include/hal \
 	  tests/config \
 	  tests/mocks \
+	  src \
+	  ../bitloom-core/include
 
 
 # Include directories (absolute paths)
@@ -57,6 +59,7 @@ all: 	test
 VPATH = $(UNITY_HOME)/src \
        	$(UNITY_HOME)/extras/fixture/src \
 	ssd1306 \
+	mocks \
 	../src \
 
 $(NAME) : $(OBJ)

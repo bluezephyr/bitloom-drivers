@@ -36,10 +36,22 @@ void ssd1306_init (uint8_t taskid);
 
 /*
  * Returns the status of the driver.  The driver will only accept new commands
- * when idle.
+ * when idle.  The function will also check the availability of the needed
+ * resourses (i.e., the communication bus).
  */
 ssd1306_state_t ssd1306_get_state(void);
 
 void ssd1306_run (void);
+
+
+/*
+ * Fundamental commands
+ */
+
+/*
+ * Set contrast level. Contrast increases as the value increases.
+ * Default value is 0x7F
+ */
+void ssd1306_set_contrast(uint8_t level);
 
 #endif // SSD1306_H
