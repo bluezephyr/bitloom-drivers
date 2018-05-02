@@ -35,14 +35,19 @@ typedef enum
 void ssd1306_init (uint8_t taskid);
 
 /*
- * Returns the status of the driver.  The driver will only accept new commands
- * when idle.  The function will also check the availability of the needed
- * resourses (i.e., the communication bus).
+ * Returns the status of the driver.  The function will also check the
+ * availability of the needed resourses (i.e., the communication bus).
  */
 ssd1306_state_t ssd1306_get_state(void);
 
 void ssd1306_run (void);
 
+/*
+ * COMMANDS
+ *
+ * Note! It is the responsibility of the application to make sure that the
+ * state is idle before any command functions are used.
+ */
 
 /*
  * Fundamental commands

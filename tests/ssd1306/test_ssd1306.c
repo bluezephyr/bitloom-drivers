@@ -15,7 +15,6 @@
 
 /*
  * Tests to be written:
- * - Call command without run to check that state is changed
  * - init_chip function
  * - set_update_area
  * - send_data
@@ -35,10 +34,11 @@ TEST_GROUP(ssd1306);
 TEST_GROUP_RUNNER(ssd1306)
 {
     RUN_TEST_CASE(ssd1306, init);
+    RUN_TEST_CASE(ssd1306, get_state_returns_busy_if_i2c_busy);
     RUN_TEST_CASE(ssd1306, call_command_changes_state_to_busy);
     RUN_TEST_CASE(ssd1306, busy_when_not_complete_command_sent_on_i2c);
     RUN_TEST_CASE(ssd1306, idle_when_complete_command_sent_on_i2c);
-    RUN_TEST_CASE(ssd1306, command_set_contrast_using_i2c);
+    RUN_TEST_CASE(ssd1306, set_contrast_command_using_i2c);
 }
 
 TEST_SETUP(ssd1306)
@@ -82,6 +82,12 @@ TEST(ssd1306, init)
     TEST_ASSERT_EQUAL_INT(ssd1306_idle, ssd1306_get_state());
 }
 
+TEST(ssd1306, get_state_returns_busy_if_i2c_busy)
+{
+    ssd1306_mock_set_com_busy();
+    TEST_ASSERT_EQUAL_INT(ssd1306_busy, ssd1306_get_state());
+}
+
 TEST(ssd1306, call_command_changes_state_to_busy)
 {
     prepare_and_call_set_contrast_command();
@@ -106,7 +112,7 @@ TEST(ssd1306, idle_when_complete_command_sent_on_i2c)
     ssd1306_mock_verify_complete();
 }
 
-TEST(ssd1306, command_set_contrast_using_i2c)
+TEST(ssd1306, set_contrast_command_using_i2c)
 {
     prepare_and_call_set_contrast_command();
     ssd1306_mock_verify_complete();

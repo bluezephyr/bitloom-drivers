@@ -29,5 +29,6 @@ void ssd1306_mock_expect_i2c_master_write(uint8_t address, uint8_t* data, uint16
  * link.
  */
 void ssd1306_mock_com_send_byte(void);
+void ssd1306_mock_set_com_busy(void);
 
 #endif // SSD1306_MOCK_H

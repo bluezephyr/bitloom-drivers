@@ -249,3 +249,8 @@ void ssd1306_mock_com_send_byte(void)
 {
     self.remaining_bytes_to_send--;
 }
+
+void ssd1306_mock_set_com_busy(void)
+{
+    self.remaining_bytes_to_send = 1;
+}
