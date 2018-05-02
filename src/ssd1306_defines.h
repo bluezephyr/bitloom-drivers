@@ -15,5 +15,7 @@
  * Fundamental commands
  */
 #define SSD1306_SET_CONTRAST        0x81
+#define SSD1306_DISPLAY_ON          0xAF
+#define SSD1306_DISPLAY_SLEEP       0xAE
 
 #endif  // SSD1306_DEFINES_H

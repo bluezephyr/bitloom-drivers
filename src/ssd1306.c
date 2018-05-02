@@ -81,6 +81,18 @@ void ssd1306_set_contrast(uint8_t level)
     ssd1306_i2c_write (self.buffer, 2);
 }
 
+void ssd1306_set_display_on(uint8_t state)
+{
+    if (state)
+    {
+        self.buffer[0] = SSD1306_DISPLAY_ON;
+    }
+    else
+    {
+        self.buffer[0] = SSD1306_DISPLAY_SLEEP;
+    }
+    ssd1306_i2c_write (self.buffer, 1);
+}
 
 /*
  * Com functions

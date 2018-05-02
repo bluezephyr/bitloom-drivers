@@ -19,16 +19,14 @@
  * - set_update_area
  * - send_data
  * - Make sure that the selected bus (SPI or I2C) is used
- * - Check that busy is returned if the bus is currently used by another
- *   application.
  */
 
 /*
  * Defines for the test cases.
  */
-#define SSD_TASK_ID         1
-#define SSD_LOW_CONTRAST    0x20
-#define SSD_CONTRAST_COMMAND_LENGTH 2
+#define SSD_TASK_ID                      1
+#define SSD_LOW_CONTRAST              0x20
+#define SSD_CONTRAST_COMMAND_LENGTH      2
 
 TEST_GROUP(ssd1306);
 TEST_GROUP_RUNNER(ssd1306)
@@ -39,6 +37,8 @@ TEST_GROUP_RUNNER(ssd1306)
     RUN_TEST_CASE(ssd1306, busy_when_not_complete_command_sent_on_i2c);
     RUN_TEST_CASE(ssd1306, idle_when_complete_command_sent_on_i2c);
     RUN_TEST_CASE(ssd1306, set_contrast_command_using_i2c);
+    RUN_TEST_CASE(ssd1306, set_display_on_using_i2c);
+    RUN_TEST_CASE(ssd1306, set_display_off_using_i2c);
 }
 
 TEST_SETUP(ssd1306)
@@ -115,5 +115,25 @@ TEST(ssd1306, idle_when_complete_command_sent_on_i2c)
 TEST(ssd1306, set_contrast_command_using_i2c)
 {
     prepare_and_call_set_contrast_command();
+    ssd1306_mock_verify_complete();
+}
+
+TEST(ssd1306, set_display_on_using_i2c)
+{
+    uint8_t buffer[SSD1306_COMMAND_BUFFER_LEN] = {SSD1306_DISPLAY_ON};
+    uint16_t bufferlen = 1;
+
+    ssd1306_mock_expect_i2c_master_write(SSD1306_I2C_SLAVE_ADDRESS, buffer, bufferlen);
+    ssd1306_set_display_on(1);
+    ssd1306_mock_verify_complete();
+}
+
+TEST(ssd1306, set_display_off_using_i2c)
+{
+    uint8_t buffer[SSD1306_COMMAND_BUFFER_LEN] = {SSD1306_DISPLAY_SLEEP};
+    uint16_t bufferlen = 1;
+
+    ssd1306_mock_expect_i2c_master_write(SSD1306_I2C_SLAVE_ADDRESS, buffer, bufferlen);
+    ssd1306_set_display_on(0);
     ssd1306_mock_verify_complete();
 }
