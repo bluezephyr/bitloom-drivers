@@ -49,13 +49,26 @@ ssd1306_state_t ssd1306_get_state(void)
 {
     ssd1306_state_t state = ssd1306_error;
 
-    switch (self.step)
+    switch (i2c_master_get_state())
     {
-        case ssd1306_step_idle:
-            state = ssd1306_idle;
+        case i2c_idle:
+            switch (self.step)
+            {
+                case ssd1306_step_idle:
+                    state = ssd1306_idle;
+                    break;
+                case ssd1306_step_busy:
+                    state = ssd1306_busy;
+                    break;
+            }
             break;
-        case ssd1306_step_busy:
+
+        case i2c_busy:
             state = ssd1306_busy;
+            break;
+
+        case i2c_error:
+            state = ssd1306_error;
             break;
     }
     return state;
@@ -75,5 +88,4 @@ void ssd1306_set_contrast(uint8_t level)
 void ssd1306_i2c_write(uint8_t* buffer, uint8_t len)
 {
     i2c_master_write(SSD1306_I2C_SLAVE_ADDRESS, buffer, len);
-    self.step = ssd1306_step_busy;
 }

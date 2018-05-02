@@ -16,6 +16,7 @@
 #include <string.h>
 #include "ssd1306_mock.h"
 #include "unity_fixture.h"
+#include "i2c_master.h"
 
 #define MAX_EXPECTATIONS 100
 #define MAX_DATA_LEN 100
@@ -41,6 +42,7 @@ typedef struct
     uint16_t stored_expectations;
     uint16_t used_expectations;
     action_t current_action;
+    uint16_t remaining_bytes_to_send;
 } mock_t;
 
 /*
@@ -81,6 +83,7 @@ void ssd1306_mock_create(void)
     self.stored_expectations = 0;
     self.used_expectations = 0;
     self.current_action = (action_t) {0};
+    self.remaining_bytes_to_send = 0;
 }
 
 void ssd1306_mock_destroy(void)
@@ -126,6 +129,19 @@ void i2c_master_write (uint8_t address, uint8_t* buffer, uint16_t len)
     self.used_expectations++;
 }
 
+i2c_master_state_t i2c_master_get_state (void)
+{
+    if (self.remaining_bytes_to_send == 0)
+    {
+        return i2c_idle;
+    }
+    else
+    {
+        return i2c_busy;
+    }
+}
+
+
 /*
  * Help functions
  */
@@ -134,6 +150,7 @@ static void store_current_action(operation_t op, uint8_t* data, uint16_t len)
     self.current_action.operation = op;
     memcpy(self.current_action.data, data, len);
     self.current_action.datalen = len;
+    self.remaining_bytes_to_send += len;
 }
 
 static void fail_when(int condition, const char* message)
@@ -223,4 +240,12 @@ static int too_many_operations(void)
 static int not_all_operations_used(void)
 {
     return (self.used_expectations < self.stored_expectations);
+}
+
+/*
+ * Com functions
+ */
+void ssd1306_mock_com_send_byte(void)
+{
+    self.remaining_bytes_to_send--;
 }
