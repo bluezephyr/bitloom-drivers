@@ -26,7 +26,7 @@
  */
 #define SSD_TASK_ID                      1
 #define SSD_LOW_CONTRAST              0x20
-#define SSD_CONTRAST_COMMAND_LENGTH      2
+#define SSD_CONTRAST_COMMAND_LENGTH      3
 
 TEST_GROUP(ssd1306);
 TEST_GROUP_RUNNER(ssd1306)
@@ -66,8 +66,10 @@ void i2c_com_send_bytes(uint16_t number_of_bytes)
 
 void prepare_and_call_set_contrast_command(void)
 {
-    uint8_t buffer[SSD1306_COMMAND_BUFFER_LEN] = {SSD1306_SET_CONTRAST, SSD_LOW_CONTRAST};
-    uint16_t bufferlen = 2;
+    uint16_t bufferlen = 3;
+    uint8_t buffer[SSD1306_COMMAND_BUFFER_LEN] = {SSD1306_COMMAND_SINGLE,
+                                                  SSD1306_SET_CONTRAST,
+                                                  SSD_LOW_CONTRAST};
 
     ssd1306_mock_expect_i2c_master_write(SSD1306_I2C_SLAVE_ADDRESS, buffer, bufferlen);
     ssd1306_set_contrast(SSD_LOW_CONTRAST);
@@ -120,8 +122,9 @@ TEST(ssd1306, set_contrast_command_using_i2c)
 
 TEST(ssd1306, set_display_on_using_i2c)
 {
-    uint8_t buffer[SSD1306_COMMAND_BUFFER_LEN] = {SSD1306_DISPLAY_ON};
-    uint16_t bufferlen = 1;
+    uint16_t bufferlen = 2;
+    uint8_t buffer[SSD1306_COMMAND_BUFFER_LEN] = {SSD1306_COMMAND_SINGLE,
+                                                  SSD1306_DISPLAY_ON};
 
     ssd1306_mock_expect_i2c_master_write(SSD1306_I2C_SLAVE_ADDRESS, buffer, bufferlen);
     ssd1306_set_display_on();
@@ -130,8 +133,9 @@ TEST(ssd1306, set_display_on_using_i2c)
 
 TEST(ssd1306, set_display_off_using_i2c)
 {
-    uint8_t buffer[SSD1306_COMMAND_BUFFER_LEN] = {SSD1306_DISPLAY_SLEEP};
-    uint16_t bufferlen = 1;
+    uint16_t bufferlen = 2;
+    uint8_t buffer[SSD1306_COMMAND_BUFFER_LEN] = {SSD1306_COMMAND_SINGLE,
+                                                  SSD1306_DISPLAY_SLEEP};
 
     ssd1306_mock_expect_i2c_master_write(SSD1306_I2C_SLAVE_ADDRESS, buffer, bufferlen);
     ssd1306_set_display_sleep();

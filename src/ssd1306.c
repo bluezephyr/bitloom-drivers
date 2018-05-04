@@ -76,21 +76,24 @@ ssd1306_state_t ssd1306_get_state(void)
 
 void ssd1306_set_contrast(uint8_t level)
 {
-    self.buffer[0] = SSD1306_SET_CONTRAST;
-    self.buffer[1] = level;
-    ssd1306_i2c_write (self.buffer, 2);
+    self.buffer[0] = SSD1306_COMMAND_SINGLE;
+    self.buffer[1] = SSD1306_SET_CONTRAST;
+    self.buffer[2] = level;
+    ssd1306_i2c_write (self.buffer, 3);
 }
 
 void ssd1306_set_display_on(void)
 {
-    self.buffer[0] = SSD1306_DISPLAY_ON;
-    ssd1306_i2c_write (self.buffer, 1);
+    self.buffer[0] = SSD1306_COMMAND_SINGLE;
+    self.buffer[1] = SSD1306_DISPLAY_ON;
+    ssd1306_i2c_write (self.buffer, 2);
 }
 
 void ssd1306_set_display_sleep(void)
 {
-    self.buffer[0] = SSD1306_DISPLAY_SLEEP;
-    ssd1306_i2c_write (self.buffer, 1);
+    self.buffer[0] = SSD1306_COMMAND_SINGLE;
+    self.buffer[1] = SSD1306_DISPLAY_SLEEP;
+    ssd1306_i2c_write (self.buffer, 2);
 }
 
 /*
