@@ -124,7 +124,7 @@ TEST(ssd1306, set_display_on_using_i2c)
     uint16_t bufferlen = 1;
 
     ssd1306_mock_expect_i2c_master_write(SSD1306_I2C_SLAVE_ADDRESS, buffer, bufferlen);
-    ssd1306_set_display_on(1);
+    ssd1306_set_display_on();
     ssd1306_mock_verify_complete();
 }
 
@@ -134,6 +134,6 @@ TEST(ssd1306, set_display_off_using_i2c)
     uint16_t bufferlen = 1;
 
     ssd1306_mock_expect_i2c_master_write(SSD1306_I2C_SLAVE_ADDRESS, buffer, bufferlen);
-    ssd1306_set_display_on(0);
+    ssd1306_set_display_sleep();
     ssd1306_mock_verify_complete();
 }

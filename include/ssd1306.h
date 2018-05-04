@@ -60,8 +60,9 @@ void ssd1306_run (void);
 void ssd1306_set_contrast(uint8_t level);
 
 /*
- * Turn the OLED panel display on (state !=0) or off (sleep mode).
+ * Turn the OLED panel display on or put it in sleep mode (default value).
  */
-void ssd1306_set_display_on(uint8_t state);
+void ssd1306_set_display_on (void);
+void ssd1306_set_display_sleep (void);
 
 #endif // SSD1306_H
