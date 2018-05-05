@@ -17,6 +17,7 @@
  */
 #include "i2c_master.h"
 void ssd1306_i2c_write(uint8_t* buffer, uint8_t len);
+void ssd1306_i2c_write_register(uint8_t reg, uint8_t* buffer, uint8_t len);
 /* End Com functions */
 
 /*
@@ -96,10 +97,20 @@ void ssd1306_set_display_sleep(void)
     ssd1306_i2c_write (self.buffer, 2);
 }
 
+void ssd1306_send_graphics_data(uint8_t* buffer, uint16_t len)
+{
+    ssd1306_i2c_write_register(SSD1306_DATA_STREAM, buffer, len);
+}
+
 /*
- * Com functions
+ * Com functions for I2C
  */
 void ssd1306_i2c_write(uint8_t* buffer, uint8_t len)
 {
     i2c_master_write(SSD1306_I2C_SLAVE_ADDRESS, buffer, len);
+}
+
+void ssd1306_i2c_write_register(uint8_t reg, uint8_t* buffer, uint8_t len)
+{
+    i2c_master_write_register(SSD1306_I2C_SLAVE_ADDRESS, reg, buffer, len);
 }

@@ -23,12 +23,14 @@
 
 typedef enum
 {
-    i2c_write_op
+    i2c_write_op,
+    i2c_write_reg_op
 } operation_t;
 
 typedef struct
 {
     operation_t operation;
+    uint8_t reg;
     uint8_t data[MAX_DATA_LEN];
     uint16_t datalen;
 } action_t;
@@ -53,9 +55,10 @@ static mock_t self;
 /*
  * Local function prototypes.
  */
-static void store_expectation(operation_t op, uint8_t* data, uint16_t len);
-static void store_current_action(operation_t op, uint8_t* data, uint16_t len);
+static void store_expectation(operation_t op, uint8_t reg, uint8_t* data, uint16_t len);
+static void store_current_action(operation_t op, uint8_t reg, uint8_t* data, uint16_t len);
 static void fail_when_operation_is_not_expected(void);
+static void fail_when_register_is_not_expected(void);
 static void fail_when_datalen_is_not_correct(void);
 static void fail_when_data_is_not_correct(void);
 static void fail_when(int condition, const char* message);
@@ -68,6 +71,7 @@ static const char* get_string(operation_t operation);
  * Strings
  */
 static const char* string_operation_i2c_write      = "I2C write";
+static const char* string_operation_i2c_write_reg  = "I2C write register";
 //static const char* string_expected                 = "Expected";
 //static const char* string_actual                   = "Actual";
 static const char* string_operation_unknown        = "unknown string";
@@ -102,14 +106,21 @@ void ssd1306_mock_verify_complete(void)
 
 void ssd1306_mock_expect_i2c_master_write(uint8_t address, uint8_t* data, uint16_t len)
 {
-    store_expectation(i2c_write_op, data, len);
+    store_expectation(i2c_write_op, 0, data, len);
 }
 
-static void store_expectation(operation_t op, uint8_t* data, uint16_t len)
+void ssd1306_mock_expect_i2c_master_write_register(uint8_t address, uint8_t reg,
+                                                   uint8_t* data, uint16_t len)
+{
+    store_expectation(i2c_write_reg_op, reg, data, len);
+}
+
+static void store_expectation(operation_t op, uint8_t reg, uint8_t* data, uint16_t len)
 {
     action_t expectation;
 
     expectation.operation = op;
+    expectation.reg = reg;
     memcpy(expectation.data, data, len);
     expectation.datalen = len;
     self.expectations[self.stored_expectations] = expectation;
@@ -122,7 +133,19 @@ static void store_expectation(operation_t op, uint8_t* data, uint16_t len)
 void i2c_master_write (uint8_t address, uint8_t* buffer, uint16_t len)
 {
     fail_when(too_many_operations(), string_too_many_operations);
-    store_current_action(i2c_write_op, buffer, len);
+    store_current_action(i2c_write_op, 0, buffer, len);
+    fail_when_operation_is_not_expected();
+    fail_when_datalen_is_not_correct();
+    fail_when_data_is_not_correct();
+    self.used_expectations++;
+}
+
+void i2c_master_write_register (uint8_t address, uint8_t write_register,
+                                uint8_t* buffer, uint16_t len)
+{
+    fail_when(too_many_operations(), string_too_many_operations);
+    store_current_action(i2c_write_reg_op, write_register, buffer, len);
+    fail_when_register_is_not_expected();
     fail_when_operation_is_not_expected();
     fail_when_datalen_is_not_correct();
     fail_when_data_is_not_correct();
@@ -145,9 +168,10 @@ i2c_master_state_t i2c_master_get_state (void)
 /*
  * Help functions
  */
-static void store_current_action(operation_t op, uint8_t* data, uint16_t len)
+static void store_current_action(operation_t op, uint8_t reg, uint8_t* data, uint16_t len)
 {
     self.current_action.operation = op;
+    self.current_action.reg = reg;
     memcpy(self.current_action.data, data, len);
     self.current_action.datalen = len;
     self.remaining_bytes_to_send += len;
@@ -172,6 +196,22 @@ static void fail_when_operation_is_not_expected(void)
         actual = get_string(self.current_action.operation);
         expected = get_string(self.expectations[self.used_expectations].operation);
         sprintf(message, "Operation failure in step %i. Expected: %s, Actual: %s",
+                self.used_expectations+1, expected, actual);
+        TEST_FAIL_MESSAGE(message);
+    }
+}
+
+static void fail_when_register_is_not_expected(void)
+{
+    if (self.current_action.reg != self.expectations[self.used_expectations].reg)
+    {
+        char message[100];
+        const char* expected;
+        const char* actual;
+
+        actual = get_string(self.current_action.reg);
+        expected = get_string(self.expectations[self.used_expectations].reg);
+        sprintf(message, "Wrong register in step %i. Expected: %s, Actual: %s",
                 self.used_expectations+1, expected, actual);
         TEST_FAIL_MESSAGE(message);
     }
@@ -228,6 +268,8 @@ static const char* get_string(operation_t operation)
     {
         case i2c_write_op:
             return string_operation_i2c_write;
+        case i2c_write_reg_op:
+            return string_operation_i2c_write_reg;
     }
     return string_operation_unknown;
 }

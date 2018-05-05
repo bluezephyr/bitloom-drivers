@@ -8,6 +8,7 @@
  *
  */
 
+#include <string.h>
 #include "unity_fixture.h"
 #include "ssd1306.h"
 #include "ssd1306_defines.h"
@@ -39,6 +40,7 @@ TEST_GROUP_RUNNER(ssd1306)
     RUN_TEST_CASE(ssd1306, set_contrast_command_using_i2c);
     RUN_TEST_CASE(ssd1306, set_display_on_using_i2c);
     RUN_TEST_CASE(ssd1306, set_display_off_using_i2c);
+    RUN_TEST_CASE(ssd1306, send_graphics_data_over_i2c);
 }
 
 TEST_SETUP(ssd1306)
@@ -139,5 +141,18 @@ TEST(ssd1306, set_display_off_using_i2c)
 
     ssd1306_mock_expect_i2c_master_write(SSD1306_I2C_SLAVE_ADDRESS, buffer, bufferlen);
     ssd1306_set_display_sleep();
+    ssd1306_mock_verify_complete();
+}
+
+TEST(ssd1306, send_graphics_data_over_i2c)
+{
+    uint16_t bufferlen = 8;
+    uint8_t expected_buffer[8] = {0, 1, 2, 3, 4, 5, 6, 7};
+    uint8_t buffer[8];
+
+    memcpy(buffer, expected_buffer, bufferlen);
+    ssd1306_mock_expect_i2c_master_write_register(SSD1306_I2C_SLAVE_ADDRESS,
+            SSD1306_DATA_STREAM, expected_buffer, bufferlen);
+    ssd1306_send_graphics_data(buffer, bufferlen);
     ssd1306_mock_verify_complete();
 }

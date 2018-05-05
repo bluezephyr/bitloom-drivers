@@ -65,4 +65,13 @@ void ssd1306_set_contrast(uint8_t level);
 void ssd1306_set_display_on (void);
 void ssd1306_set_display_sleep (void);
 
+/*
+ * DATA SEND
+ *
+ * The function will send the specified graphics data to the OLED panel using
+ * the communication bus.  The buffer and its contents must not be modified
+ * until the state is idle.
+ */
+void ssd1306_send_graphics_data(uint8_t* buffer, uint16_t len);
+
 #endif // SSD1306_H
