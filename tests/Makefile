@@ -5,6 +5,10 @@
 NAME   := bitloom_unittests
 ROOT   := ../
 
+ifndef BITLOOM_CORE
+	BITLOOM_CORE := ../../bitloom-core
+endif
+
 SRC    := test_main.c \
 	  test_ssd1306.c \
 	  ssd1306.c \
@@ -16,11 +20,10 @@ INC    := include \
 	  tests/config \
 	  tests/mocks \
 	  src \
-	  ../bitloom-core/include
 
 
 # Include directories (absolute paths)
-INC_A  	:=
+INC_A  	:= $(BITLOOM_CORE)/include
 
 
 #-----------------------------------------------------------------------------#

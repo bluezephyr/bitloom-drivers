@@ -1,6 +1,7 @@
 language: c
 before_script:
  - git clone https://github.com/ThrowTheSwitch/Unity.git ~/Unity
+ - git clone https://github.com/bluezephyr/bitloom-core.git ~/bitloom-core
  - cd tests
 script: make
 
