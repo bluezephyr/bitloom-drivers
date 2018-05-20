@@ -21,13 +21,28 @@ void ssd1306_i2c_write_register(uint8_t reg, uint8_t* buffer, uint8_t len);
 /* End Com functions */
 
 /*
+ * Local function prototypes
+ */
+static void ssd1306_process_init_display(void);
+
+/*
  * Operation step of the ssd1306 driver
  */
 typedef enum
 {
     ssd1306_step_idle,
-    ssd1306_step_busy
 } ssd1306_step_t;
+
+typedef enum
+{
+    ssd1306_table_none,
+    ssd1306_table_init_display,
+} ssd1306_processing_table_t;
+
+typedef enum
+{
+    ssd1306_init_display_step_set_mux,
+} ssd1306_init_display_processing_steps_t;
 
 /*
  * SSD1306 class (singleton)
@@ -35,15 +50,18 @@ typedef enum
 typedef struct
 {
     ssd1306_step_t step;
+    ssd1306_processing_table_t processing_table;
+    uint8_t processing_step;
     uint8_t buffer[SSD1306_COMMAND_BUFFER_LEN];
 } ssd1306_t;
 
 static ssd1306_t self;
 
-
 void ssd1306_init (uint8_t taskid)
 {
     self.step = ssd1306_step_idle;
+    self.processing_table = ssd1306_table_none;
+    self.processing_step = 0;
 }
 
 ssd1306_state_t ssd1306_get_state(void)
@@ -57,9 +75,6 @@ ssd1306_state_t ssd1306_get_state(void)
             {
                 case ssd1306_step_idle:
                     state = ssd1306_idle;
-                    break;
-                case ssd1306_step_busy:
-                    state = ssd1306_busy;
                     break;
             }
             break;
@@ -75,6 +90,39 @@ ssd1306_state_t ssd1306_get_state(void)
     return state;
 }
 
+void ssd1306_run (void)
+{
+    switch(self.processing_table)
+    {
+        case ssd1306_table_none:
+            // Nothing to do
+            break;
+
+        case ssd1306_table_init_display:
+            ssd1306_process_init_display();
+            break;
+    }
+}
+
+static void ssd1306_process_init_display(void)
+{
+    switch(self.processing_step)
+    {
+        case ssd1306_init_display_step_set_mux:
+
+            break;
+    }
+}
+
+void ssd1306_init_display(void)
+{
+    self.processing_step = 1;
+    self.processing_table = ssd1306_table_init_display;
+}
+
+/*
+ * Fundamental commands
+ */
 void ssd1306_set_contrast(uint8_t level)
 {
     self.buffer[0] = SSD1306_COMMAND_SINGLE;
@@ -97,6 +145,36 @@ void ssd1306_set_display_sleep(void)
     ssd1306_i2c_write (self.buffer, 2);
 }
 
+/*
+ * Scrolling commands
+ */
+
+/*
+ * Addressing setting commands
+ */
+
+/*
+ * Hardware configuration commands
+ */
+void ssd1306_set_multiplex_ratio(uint8_t value)
+{
+    if((value>=SSD1306_MUX_MIN_VALUE) && (value<=SSD1306_MUX_MAX_VALUE))
+    {
+        self.buffer[0] = SSD1306_COMMAND_SINGLE;
+        self.buffer[1] = SSD1306_SET_MULTIPLEX_RATIO;
+        self.buffer[2] = value;
+        ssd1306_i2c_write (self.buffer, 3);
+    }
+}
+
+/*
+ * Timing and Driving Scheme Setting commands
+ */
+
+
+/*
+ * DATA SEND
+ */
 void ssd1306_send_graphics_data(uint8_t* buffer, uint16_t len)
 {
     ssd1306_i2c_write_register(SSD1306_DATA_STREAM, buffer, len);

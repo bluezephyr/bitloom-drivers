@@ -61,9 +61,9 @@ static void fail_when_operation_is_not_expected(void);
 static void fail_when_register_is_not_expected(void);
 static void fail_when_datalen_is_not_correct(void);
 static void fail_when_data_is_not_correct(void);
+static void fail_when_not_all_operations_used(void);
 static void fail_when(int condition, const char* message);
 static int too_many_operations(void);
-static int not_all_operations_used(void);
 static void get_data_hexstring(char* message, uint8_t* data, uint16_t datalen);
 static const char* get_string(operation_t operation);
 
@@ -76,7 +76,6 @@ static const char* string_operation_i2c_write_reg  = "I2C write register";
 //static const char* string_actual                   = "Actual";
 static const char* string_operation_unknown        = "unknown string";
 static const char* string_too_many_operations      = "Too many operations";
-static const char* string_not_all_operations_used  = "Not all operations used";
 
 /*
  * Functions to control the mock.
@@ -101,7 +100,7 @@ void ssd1306_mock_destroy(void)
 
 void ssd1306_mock_verify_complete(void)
 {
-    fail_when(not_all_operations_used(), string_not_all_operations_used);
+    fail_when_not_all_operations_used();
 }
 
 void ssd1306_mock_expect_i2c_master_write(uint8_t address, uint8_t* data, uint16_t len)
@@ -251,6 +250,25 @@ static void fail_when_data_is_not_correct(void)
     }
 }
 
+static void fail_when_not_all_operations_used(void)
+{
+    char message[100];
+    char operation[20];
+    char data[30];
+
+    if (self.used_expectations < self.stored_expectations)
+    {
+        get_data_hexstring(data, self.expectations[self.used_expectations].data,
+                self.expectations[self.used_expectations].datalen);
+        memcpy(operation, get_string(self.expectations[self.used_expectations].operation), 20);
+        sprintf(message, "Not all operation used (step %i/%i). Expected: %s reg:0x%x, data: %s, datalen: %i",
+                self.used_expectations+1, self.stored_expectations,
+                operation, self.expectations[self.used_expectations].reg, data,
+                self.expectations[self.used_expectations].datalen);
+        TEST_FAIL_MESSAGE(message);
+    }
+}
+
 static void get_data_hexstring(char* output_string, uint8_t* data, uint16_t datalen)
 {
     uint16_t i;
@@ -277,11 +295,6 @@ static const char* get_string(operation_t operation)
 static int too_many_operations(void)
 {
     return (self.used_expectations == self.stored_expectations);
-}
-
-static int not_all_operations_used(void)
-{
-    return (self.used_expectations < self.stored_expectations);
 }
 
 /*

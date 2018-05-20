@@ -3,5 +3,13 @@
 
 #include <stdint.h>
 
+#define SSD1306_DEFAULT_CONTRAST                          0x7F
+#define SSD1306_DEFAULT_MUX_VALUE                         0x3F
+#define SSD1306_DEFAULT_DISPLAY_OFFSET                    0x00
+#define SSD1306_DEFAULT_DISPLAY_STARTLINE                 0x00
+#define SSD1306_DEFAULT_COM_PINS_HARDWARE_CONFIGURATION   0x12
+
+#define SSD1306_DEFAULT_DISPLAY_CLOCK_DIVIDE_RATIO        0x01
+#define SSD1306_DEFAULT_OSCILLATOR_FREQUENCY              0x08
 
 #endif  // SSD1306_CONFIG_H

@@ -40,13 +40,38 @@ void ssd1306_init (uint8_t taskid);
  */
 ssd1306_state_t ssd1306_get_state(void);
 
+/*
+ * Function to run the SSD1306 task.  This function must be executes to service
+ * the multi step commands of the driver.
+ */
 void ssd1306_run (void);
 
 /*
  * COMMANDS
  *
- * Note! It is the responsibility of the application to make sure that the
- * state is idle before any command functions are used.
+ * Note! For all commands, it is the responsibility of the application to make
+ * sure that the state is idle before any command functions are used.
+ */
+
+/*
+ * MULTI STEP COMMANDS
+ *
+ * The following commands require that the run function is executed in order
+ * for the command to be processed.
+ */
+
+/*
+ * Function to initalize the OLED display.  The function is multi step and
+ * requires the run function to be executed until the get_state function
+ * returns idle.
+ *
+ * The function uses the values in the config file to configure the diplay.
+ */
+void ssd1306_init_display(void);
+
+/*
+ * SIMPLE COMMANDS
+ *
  */
 
 /*
@@ -64,6 +89,23 @@ void ssd1306_set_contrast(uint8_t level);
  */
 void ssd1306_set_display_on (void);
 void ssd1306_set_display_sleep (void);
+
+/*
+ * Scrolling commands
+ */
+
+/*
+ * Addressing setting commands
+ */
+
+/*
+ * Hardware configuration commands
+ */
+void ssd1306_set_multiplex_ratio (uint8_t value);
+
+/*
+ * Timing and Driving Scheme Setting commands
+ */
 
 /*
  * DATA SEND
