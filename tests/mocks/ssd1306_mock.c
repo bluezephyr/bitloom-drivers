@@ -194,7 +194,7 @@ static void fail_when_operation_is_not_expected(void)
 
         actual = get_string(self.current_action.operation);
         expected = get_string(self.expectations[self.used_expectations].operation);
-        sprintf(message, "Operation failure in step %i. Expected: %s, Actual: %s",
+        sprintf(message, "Operation failure in step %i. Expected: '%s', Actual: '%s'",
                 self.used_expectations+1, expected, actual);
         TEST_FAIL_MESSAGE(message);
     }
@@ -261,7 +261,7 @@ static void fail_when_not_all_operations_used(void)
         get_data_hexstring(data, self.expectations[self.used_expectations].data,
                 self.expectations[self.used_expectations].datalen);
         memcpy(operation, get_string(self.expectations[self.used_expectations].operation), 20);
-        sprintf(message, "Not all operation used (step %i/%i). Expected: %s reg:0x%x, data: %s, datalen: %i",
+        sprintf(message, "Not all operations used (step %i/%i). Expected: '%s' reg: 0x%x, data: %s, datalen: %i",
                 self.used_expectations+1, self.stored_expectations,
                 operation, self.expectations[self.used_expectations].reg, data,
                 self.expectations[self.used_expectations].datalen);
@@ -302,7 +302,10 @@ static int too_many_operations(void)
  */
 void ssd1306_mock_com_send_byte(void)
 {
-    self.remaining_bytes_to_send--;
+    if (self.remaining_bytes_to_send > 0)
+    {
+        self.remaining_bytes_to_send--;
+    }
 }
 
 void ssd1306_mock_set_com_busy(void)

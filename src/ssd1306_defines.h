@@ -37,14 +37,15 @@
 /*
  * Hardware configuration commands
  */
-#define SSD1306_DISPLAY_START_LINE                        0x40
+#define SSD1306_SET_DISPLAY_START_LINE                    0x40
+#define SSD1306_DISPLAY_START_LINE_MAX                    0x3F
 #define SSD1306_SEGMENT_REMAP_0                           0xA0
 #define SSD1306_SEGMENT_REMAP_127                         0xA1
 #define SSD1306_SET_MULTIPLEX_RATIO                       0xA8
-#define SSD1306_MUX_MIN_VALUE                             0x0F
-#define SSD1306_MUX_MAX_VALUE                             0x3F
-#define SSD1306_SET_COM_OUTPUT_SCAN_DIRERCTION_NORMAL     0xC0
-#define SSD1306_SET_COM_OUTPUT_SCAN_DIRERCTION_REMAP      0xC8
+#define SSD1306_MUX_MIN_VALUE                             0x10
+#define SSD1306_MUX_MAX_VALUE                             0x40
+#define SSD1306_SET_COM_OUTPUT_SCAN_DIRECTION_NORMAL      0xC0
+#define SSD1306_SET_COM_OUTPUT_SCAN_DIRECTION_REMAPPED    0xC8
 #define SSD1306_SET_DISPLAY_OFFSET                        0xD3
 #define SSD1306_SET_COM_PINS_HARDWARE_CONFIGURATION       0xDA
 

@@ -85,7 +85,8 @@ void ssd1306_init_display(void);
 void ssd1306_set_contrast(uint8_t level);
 
 /*
- * Turn the OLED panel display on or put it in sleep mode (default value).
+ * Turn the OLED panel display on or put it in sleep mode.
+ * Default value is sleep mode.
  */
 void ssd1306_set_display_on (void);
 void ssd1306_set_display_sleep (void);
@@ -101,7 +102,40 @@ void ssd1306_set_display_sleep (void);
 /*
  * Hardware configuration commands
  */
-void ssd1306_set_multiplex_ratio (uint8_t value);
+
+/*
+ * Set display RAM display start line register from 0-63.
+ * Default value is 0.
+ */
+void ssd1306_set_display_start_line(uint8_t line);
+
+/*
+ * Set which column address that is mapped to segment 0.
+ * Default value is 0.
+ */
+void ssd1306_set_segment_remap_0(void);
+void ssd1306_set_segment_remap_127(void);
+
+/*
+ * Set MUX ratio from 16MUX to 64MUX (decimal).
+ * Default value is 64.
+ */
+void ssd1306_set_multiplex_ratio(uint8_t ratio);
+
+/*
+ * This command sets the scan direction of the COM output.
+ * In remapped mode; scan from COM[N-1] to COM0, where N is the Multiplex ratio.
+ * Default value is normal.
+ */
+void ssd1306_set_com_output_scan_direction_normal(void);
+void ssd1306_set_com_output_scan_direction_remapped(void);
+
+/*
+ * Set vertical shift from 0-63 (decimal).
+ * Default value is 0.
+ */
+void ssd1306_set_display_offset (uint8_t offset);
+
 
 /*
  * Timing and Driving Scheme Setting commands

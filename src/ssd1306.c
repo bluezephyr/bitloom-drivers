@@ -11,6 +11,7 @@
  */
 #include "ssd1306.h"
 #include "ssd1306_defines.h"
+#include <stdio.h>
 
 /*
  * Com functions - to be moved to separate module
@@ -26,13 +27,8 @@ void ssd1306_i2c_write_register(uint8_t reg, uint8_t* buffer, uint8_t len);
 static void ssd1306_process_init_display(void);
 
 /*
- * Operation step of the ssd1306 driver
+ * Processing tables are used to manage multi step commands.
  */
-typedef enum
-{
-    ssd1306_step_idle,
-} ssd1306_step_t;
-
 typedef enum
 {
     ssd1306_table_none,
@@ -41,7 +37,17 @@ typedef enum
 
 typedef enum
 {
-    ssd1306_init_display_step_set_mux,
+    ssd1306_init_display_set_set_mux,
+    ssd1306_init_display_set_display_offset,
+    ssd1306_init_display_set_display_start_line,
+    ssd1306_init_display_set_segment_remap_0,
+    ssd1306_init_display_set_com_output_scan_direction_normal,
+    ssd1306_init_display_set_com_pins_hardware_configuration,
+    ssd1306_init_display_set_contrast,
+    ssd1306_init_display_display_sleep,
+    ssd1306_init_display_set_clock_divider_and_oscillator,
+    ssd1306_init_display_charge_pump_setting,
+    ssd1306_init_display_display_on
 } ssd1306_init_display_processing_steps_t;
 
 /*
@@ -49,7 +55,6 @@ typedef enum
  */
 typedef struct
 {
-    ssd1306_step_t step;
     ssd1306_processing_table_t processing_table;
     uint8_t processing_step;
     uint8_t buffer[SSD1306_COMMAND_BUFFER_LEN];
@@ -59,7 +64,6 @@ static ssd1306_t self;
 
 void ssd1306_init (uint8_t taskid)
 {
-    self.step = ssd1306_step_idle;
     self.processing_table = ssd1306_table_none;
     self.processing_step = 0;
 }
@@ -71,10 +75,13 @@ ssd1306_state_t ssd1306_get_state(void)
     switch (i2c_master_get_state())
     {
         case i2c_idle:
-            switch (self.step)
+            switch (self.processing_table)
             {
-                case ssd1306_step_idle:
+                case ssd1306_table_none:
                     state = ssd1306_idle;
+                    break;
+                case ssd1306_table_init_display:
+                    state = ssd1306_busy;
                     break;
             }
             break;
@@ -92,6 +99,11 @@ ssd1306_state_t ssd1306_get_state(void)
 
 void ssd1306_run (void)
 {
+    if (i2c_master_get_state() != i2c_idle)
+    {
+        return;
+    }
+
     switch(self.processing_table)
     {
         case ssd1306_table_none:
@@ -108,16 +120,45 @@ static void ssd1306_process_init_display(void)
 {
     switch(self.processing_step)
     {
-        case ssd1306_init_display_step_set_mux:
-
+        case ssd1306_init_display_set_set_mux:
+            ssd1306_set_multiplex_ratio(SSD1306_DEFAULT_MUX_VALUE);
+            self.processing_step = ssd1306_init_display_set_display_offset;
+            break;
+        case ssd1306_init_display_set_display_offset:
+            ssd1306_set_display_offset(SSD1306_DEFAULT_DISPLAY_OFFSET);
+            self.processing_step = ssd1306_init_display_set_display_start_line;
+            break;
+        case ssd1306_init_display_set_display_start_line:
+            ssd1306_set_display_start_line(SSD1306_DEFAULT_DISPLAY_STARTLINE);
+            self.processing_step = ssd1306_init_display_set_segment_remap_0;
+            break;
+        case ssd1306_init_display_set_segment_remap_0:
+            ssd1306_set_segment_remap_0();
+            self.processing_step = ssd1306_init_display_set_com_output_scan_direction_normal;
+            break;
+        case ssd1306_init_display_set_com_output_scan_direction_normal:
+            ssd1306_set_com_output_scan_direction_normal();
+            self.processing_step = ssd1306_init_display_set_com_pins_hardware_configuration;
+            break;
+        case ssd1306_init_display_set_com_pins_hardware_configuration:
+            break;
+        case ssd1306_init_display_set_contrast:
+            break;
+        case ssd1306_init_display_display_sleep:
+            break;
+        case ssd1306_init_display_set_clock_divider_and_oscillator:
+            break;
+        case ssd1306_init_display_charge_pump_setting:
+            break;
+        case ssd1306_init_display_display_on:
             break;
     }
 }
 
 void ssd1306_init_display(void)
 {
-    self.processing_step = 1;
     self.processing_table = ssd1306_table_init_display;
+    self.processing_step = ssd1306_init_display_set_set_mux;
 }
 
 /*
@@ -156,13 +197,62 @@ void ssd1306_set_display_sleep(void)
 /*
  * Hardware configuration commands
  */
-void ssd1306_set_multiplex_ratio(uint8_t value)
+void ssd1306_set_display_start_line(uint8_t line)
 {
-    if((value>=SSD1306_MUX_MIN_VALUE) && (value<=SSD1306_MUX_MAX_VALUE))
+    if (line <= SSD1306_DISPLAY_START_LINE_MAX)
+    {
+        self.buffer[0] = SSD1306_COMMAND_SINGLE;
+        self.buffer[1] = SSD1306_SET_DISPLAY_START_LINE | line;
+        ssd1306_i2c_write (self.buffer, 2);
+    }
+}
+
+void ssd1306_set_segment_remap_0(void)
+{
+    self.buffer[0] = SSD1306_COMMAND_SINGLE;
+    self.buffer[1] = SSD1306_SEGMENT_REMAP_0;
+    ssd1306_i2c_write (self.buffer, 2);
+}
+
+void ssd1306_set_segment_remap_127(void)
+{
+    self.buffer[0] = SSD1306_COMMAND_SINGLE;
+    self.buffer[1] = SSD1306_SEGMENT_REMAP_127;
+    ssd1306_i2c_write (self.buffer, 2);
+}
+
+void ssd1306_set_multiplex_ratio(uint8_t ratio)
+{
+    if((ratio>=SSD1306_MUX_MIN_VALUE) && (ratio<=SSD1306_MUX_MAX_VALUE))
     {
         self.buffer[0] = SSD1306_COMMAND_SINGLE;
         self.buffer[1] = SSD1306_SET_MULTIPLEX_RATIO;
-        self.buffer[2] = value;
+        self.buffer[2] = ratio - 1;
+        ssd1306_i2c_write (self.buffer, 3);
+    }
+}
+
+void ssd1306_set_com_output_scan_direction_normal(void)
+{
+    self.buffer[0] = SSD1306_COMMAND_SINGLE;
+    self.buffer[1] = SSD1306_SET_COM_OUTPUT_SCAN_DIRECTION_NORMAL;
+    ssd1306_i2c_write (self.buffer, 2);
+}
+
+void ssd1306_set_com_output_scan_direction_remapped(void)
+{
+    self.buffer[0] = SSD1306_COMMAND_SINGLE;
+    self.buffer[1] = SSD1306_SET_COM_OUTPUT_SCAN_DIRECTION_REMAPPED;
+    ssd1306_i2c_write (self.buffer, 2);
+}
+
+void ssd1306_set_display_offset (uint8_t offset)
+{
+    if (offset < 64)
+    {
+        self.buffer[0] = SSD1306_COMMAND_SINGLE;
+        self.buffer[1] = SSD1306_SET_DISPLAY_OFFSET;
+        self.buffer[2] = offset;
         ssd1306_i2c_write (self.buffer, 3);
     }
 }
