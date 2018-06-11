@@ -13,6 +13,7 @@
 #include "ssd1306.h"
 #include "ssd1306_defines.h"
 #include "ssd1306_mock.h"
+#include "ssd1306_config.h"
 
 /*
  * Tests to be written:
@@ -25,17 +26,27 @@
 /*
  * Defines for the test cases.
  */
-#define SSD_TASK_ID                             1
-#define SSD_LOW_CONTRAST                     0x20
-#define SSD_DISPLAY_LINE_VALUE_OK            0x20
-#define SSD_DISPLAY_LINE_VALUE_TOO_HIGH      0x40
-#define SSD_MULTIPLEX_RATIO_VALUE_TOO_LOW    0x0F
-#define SSD_MULTIPLEX_RATIO_VALUE_TOO_HIGH   0x41
-#define SSD_MULTIPLEX_RATIO_VALUE_OK         0x20
-#define SSD_DISPLAY_OFFSET_VALUE_OK          0x10
-#define SSD_DISPLAY_OFFSET_VALUE_TOO_HIGH    0x40
-#define SSD_CONTRAST_COMMAND_LENGTH             3
-#define I2C_TASK_BYTES_PER_TICK                 8
+#define SSD_TASK_ID                                          1
+#define SSD_LOW_CONTRAST                                  0x20
+#define SSD_DISPLAY_LINE_VALUE_OK                         0x20
+#define SSD_DISPLAY_LINE_VALUE_TOO_HIGH                   0x40
+#define SSD_MULTIPLEX_RATIO_VALUE_TOO_LOW                 0x0F
+#define SSD_MULTIPLEX_RATIO_VALUE_TOO_HIGH                0x41
+#define SSD_MULTIPLEX_RATIO_VALUE_OK                      0x20
+#define SSD_DISPLAY_OFFSET_VALUE_OK                       0x10
+#define SSD_DISPLAY_OFFSET_VALUE_TOO_HIGH                 0x40
+#define SSD_COM_PIN_HW_CONF_EN_ALT_DIS_LR                 0x12 // (00010010)
+#define SSD_COM_PIN_HW_CONF_DIS_ALT_EN_LR                 0x22 // (00100010)
+#define SSD1306_DEFAULT_COM_PINS_HARDWARE_CONFIGURATION   0x12
+#define SSD_CLOCK_DIVIDER_TOO_LOW                         0x00
+#define SSD_CLOCK_DIVIDER_TOO_HIGH                        0x11
+#define SSD_CLOCK_DIVIDER_OK                              0x09
+#define SSD_CLOCK_OSCILLATOR_FREQUENCY_OK                 0x08
+#define SSD_CLOCK_OSCILLATOR_FREQUENCY_TOO_HIGH           0x10
+#define SSD_CLOCK_DIVIDER_OK_OSC_FREQ_OK                  0xFF
+
+#define SSD_CONTRAST_COMMAND_LENGTH                          3
+#define I2C_TASK_BYTES_PER_TICK                              8
 
 TEST_GROUP(ssd1306_i2c);
 TEST_GROUP_RUNNER(ssd1306_i2c)
@@ -46,6 +57,10 @@ TEST_GROUP_RUNNER(ssd1306_i2c)
     RUN_TEST_CASE(ssd1306_i2c, busy_when_not_complete_command_sent_on_i2c);
     RUN_TEST_CASE(ssd1306_i2c, idle_when_complete_command_sent_on_i2c);
     RUN_TEST_CASE(ssd1306_i2c, set_contrast_command);
+    RUN_TEST_CASE(ssd1306_i2c, set_display_pixels_entire_display_on);
+    RUN_TEST_CASE(ssd1306_i2c, set_display_pixels_use_pixel_data_from_RAM);
+    RUN_TEST_CASE(ssd1306_i2c, set_normal_display);
+    RUN_TEST_CASE(ssd1306_i2c, set_inverted_display);
     RUN_TEST_CASE(ssd1306_i2c, set_display_on);
     RUN_TEST_CASE(ssd1306_i2c, set_display_off);
     RUN_TEST_CASE(ssd1306_i2c, send_graphics_data_over_i2c);
@@ -60,6 +75,14 @@ TEST_GROUP_RUNNER(ssd1306_i2c)
     RUN_TEST_CASE(ssd1306_i2c, set_multiplex_ratio_value_ok);
     RUN_TEST_CASE(ssd1306_i2c, set_display_offset_too_high);
     RUN_TEST_CASE(ssd1306_i2c, set_display_offset_value_ok);
+    RUN_TEST_CASE(ssd1306_i2c, set_com_pins_hardware_enable_alt_com_and_disable_left_right_remap);
+    RUN_TEST_CASE(ssd1306_i2c, set_com_pins_hardware_disable_alt_com_and_enable_left_right_remap);
+    RUN_TEST_CASE(ssd1306_i2c, set_display_clock_divide_ratio_too_low_osc_freq_ok);
+    RUN_TEST_CASE(ssd1306_i2c, set_display_clock_divide_ratio_too_high_osc_freq_ok);
+    RUN_TEST_CASE(ssd1306_i2c, set_display_clock_divide_ratio_ok_high_osc_freq_too_high);
+    RUN_TEST_CASE(ssd1306_i2c, set_display_clock_divide_ok_high_osc_freq_ok);
+    RUN_TEST_CASE(ssd1306_i2c, enable_charge_pump);
+    RUN_TEST_CASE(ssd1306_i2c, disable_charge_pump);
     RUN_TEST_CASE(ssd1306_i2c, init_display);
 }
 
@@ -174,6 +197,34 @@ TEST(ssd1306_i2c, set_contrast_command)
     ssd1306_mock_verify_complete();
 }
 
+TEST(ssd1306_i2c, set_display_pixels_entire_display_on)
+{
+    expect_i2c_command(SSD1306_SET_PIXELS_ENTIRE_DISPLAY_ON);
+    ssd1306_set_pixels_entire_display_on();
+    ssd1306_mock_verify_complete();
+}
+
+TEST(ssd1306_i2c, set_display_pixels_use_pixel_data_from_RAM)
+{
+    expect_i2c_command(SSD1306_SET_USE_PIXELS_FROM_RAM);
+    ssd1306_set_pixels_from_RAM();
+    ssd1306_mock_verify_complete();
+}
+
+TEST(ssd1306_i2c, set_normal_display)
+{
+    expect_i2c_command(SSD1306_SET_NORMAL_DISPLAY);
+    ssd1306_set_normal_display();
+    ssd1306_mock_verify_complete();
+}
+
+TEST(ssd1306_i2c, set_inverted_display)
+{
+    expect_i2c_command(SSD1306_SET_INVERTED_DISPLAY);
+    ssd1306_set_inverted_display();
+    ssd1306_mock_verify_complete();
+}
+
 TEST(ssd1306_i2c, set_display_on)
 {
     expect_i2c_command(SSD1306_DISPLAY_ON);
@@ -262,6 +313,61 @@ TEST(ssd1306_i2c, set_display_offset_value_ok)
     ssd1306_mock_verify_complete();
 }
 
+TEST(ssd1306_i2c, set_com_pins_hardware_enable_alt_com_and_disable_left_right_remap)
+{
+    expect_i2c_command_one_arg(SSD1306_SET_COM_PINS_HARDWARE_CONFIGURATION, SSD_COM_PIN_HW_CONF_EN_ALT_DIS_LR);
+    ssd1306_set_com_pins_hardware_config(true, false);
+    ssd1306_mock_verify_complete();
+}
+
+TEST(ssd1306_i2c, set_com_pins_hardware_disable_alt_com_and_enable_left_right_remap)
+{
+    expect_i2c_command_one_arg(SSD1306_SET_COM_PINS_HARDWARE_CONFIGURATION, SSD_COM_PIN_HW_CONF_DIS_ALT_EN_LR);
+    ssd1306_set_com_pins_hardware_config(false, true);
+    ssd1306_mock_verify_complete();
+}
+
+TEST(ssd1306_i2c, set_display_clock_divide_ratio_too_low_osc_freq_ok)
+{
+    ssd1306_set_display_clock(SSD_CLOCK_DIVIDER_TOO_LOW, SSD_CLOCK_OSCILLATOR_FREQUENCY_OK);
+    ssd1306_mock_verify_complete();
+}
+
+TEST(ssd1306_i2c, set_display_clock_divide_ratio_too_high_osc_freq_ok)
+{
+    ssd1306_set_display_clock(SSD_CLOCK_DIVIDER_TOO_HIGH, SSD_CLOCK_OSCILLATOR_FREQUENCY_OK);
+    ssd1306_mock_verify_complete();
+}
+
+TEST(ssd1306_i2c, set_display_clock_divide_ratio_ok_high_osc_freq_too_high)
+{
+    ssd1306_set_display_clock(SSD_CLOCK_DIVIDER_OK, SSD_CLOCK_OSCILLATOR_FREQUENCY_TOO_HIGH);
+    ssd1306_mock_verify_complete();
+}
+
+TEST(ssd1306_i2c, set_display_clock_divide_ok_high_osc_freq_ok)
+{
+    expect_i2c_command_one_arg(SSD1306_SET_CLOCK_DIVIDER_AND_OSCILLATOR,
+                               (SSD_CLOCK_OSCILLATOR_FREQUENCY_OK << 4) |
+                               (SSD_CLOCK_DIVIDER_OK-1));
+    ssd1306_set_display_clock(SSD_CLOCK_DIVIDER_OK, SSD_CLOCK_OSCILLATOR_FREQUENCY_OK);
+    ssd1306_mock_verify_complete();
+}
+
+TEST(ssd1306_i2c, enable_charge_pump)
+{
+    expect_i2c_command_one_arg(SSD1306_CHARGE_PUMP_SETTING, SSD1306_CHARGE_PUMP_ENABLE);
+    ssd1306_enable_charge_pump();
+    ssd1306_mock_verify_complete();
+}
+
+TEST(ssd1306_i2c, disable_charge_pump)
+{
+    expect_i2c_command_one_arg(SSD1306_CHARGE_PUMP_SETTING, SSD1306_CHARGE_PUMP_DISABLE);
+    ssd1306_disable_charge_pump();
+    ssd1306_mock_verify_complete();
+}
+
 TEST(ssd1306_i2c, send_graphics_data_over_i2c)
 {
     uint16_t bufferlen = 8;
@@ -277,7 +383,6 @@ TEST(ssd1306_i2c, send_graphics_data_over_i2c)
 
 TEST(ssd1306_i2c, init_display)
 {
-    TEST_IGNORE_MESSAGE ("Test not ready");
     expect_i2c_command_one_arg(SSD1306_SET_MULTIPLEX_RATIO, SSD1306_DEFAULT_MUX_VALUE-1);
     expect_i2c_command_one_arg(SSD1306_SET_DISPLAY_OFFSET, SSD1306_DEFAULT_DISPLAY_OFFSET);
     expect_i2c_command(SSD1306_SET_DISPLAY_START_LINE | SSD1306_DEFAULT_DISPLAY_STARTLINE);
@@ -286,15 +391,16 @@ TEST(ssd1306_i2c, init_display)
     expect_i2c_command_one_arg(SSD1306_SET_COM_PINS_HARDWARE_CONFIGURATION,
                                SSD1306_DEFAULT_COM_PINS_HARDWARE_CONFIGURATION);
     expect_i2c_command_one_arg(SSD1306_SET_CONTRAST, SSD1306_DEFAULT_CONTRAST);
-    expect_i2c_command(SSD1306_DISPLAY_SLEEP);
+    expect_i2c_command(SSD1306_SET_USE_PIXELS_FROM_RAM);
     expect_i2c_command(SSD1306_SET_NORMAL_DISPLAY);
     expect_i2c_command_one_arg(SSD1306_SET_CLOCK_DIVIDER_AND_OSCILLATOR,
-                               SSD1306_DEFAULT_OSCILLATOR_FREQUENCY << 4 |
-                               SSD1306_DEFAULT_DISPLAY_CLOCK_DIVIDE_RATIO);
+                               (SSD1306_DEFAULT_OSCILLATOR_FREQUENCY << 4) |
+                               (SSD1306_DEFAULT_DISPLAY_CLOCK_DIVIDE_RATIO-1));
     expect_i2c_command_one_arg(SSD1306_CHARGE_PUMP_SETTING, SSD1306_CHARGE_PUMP_ENABLE);
     expect_i2c_command(SSD1306_DISPLAY_ON);
 
     ssd1306_init_display();
-    run_i2c_and_ssd_tasks(12);
+    run_i2c_and_ssd_tasks(13);
+    TEST_ASSERT_EQUAL_INT(ssd1306_idle, ssd1306_get_state());
     ssd1306_mock_verify_complete();
 }

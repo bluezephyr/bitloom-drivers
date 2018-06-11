@@ -11,6 +11,7 @@
  */
 #include "ssd1306.h"
 #include "ssd1306_defines.h"
+#include "ssd1306_config.h"
 #include <stdio.h>
 
 /*
@@ -24,7 +25,8 @@ void ssd1306_i2c_write_register(uint8_t reg, uint8_t* buffer, uint8_t len);
 /*
  * Local function prototypes
  */
-static void ssd1306_process_init_display(void);
+static void process_init_display(void);
+static ssd1306_state_t get_internal_state(void);
 
 /*
  * Processing tables are used to manage multi step commands.
@@ -44,7 +46,8 @@ typedef enum
     ssd1306_init_display_set_com_output_scan_direction_normal,
     ssd1306_init_display_set_com_pins_hardware_configuration,
     ssd1306_init_display_set_contrast,
-    ssd1306_init_display_display_sleep,
+    ssd1306_init_display_set_use_pixels_from_ram,
+    ssd1306_init_display_set_normal_display,
     ssd1306_init_display_set_clock_divider_and_oscillator,
     ssd1306_init_display_charge_pump_setting,
     ssd1306_init_display_display_on
@@ -59,7 +62,6 @@ typedef struct
     uint8_t processing_step;
     uint8_t buffer[SSD1306_COMMAND_BUFFER_LEN];
 } ssd1306_t;
-
 static ssd1306_t self;
 
 void ssd1306_init (uint8_t taskid)
@@ -75,15 +77,7 @@ ssd1306_state_t ssd1306_get_state(void)
     switch (i2c_master_get_state())
     {
         case i2c_idle:
-            switch (self.processing_table)
-            {
-                case ssd1306_table_none:
-                    state = ssd1306_idle;
-                    break;
-                case ssd1306_table_init_display:
-                    state = ssd1306_busy;
-                    break;
-            }
+            state = get_internal_state();
             break;
 
         case i2c_busy:
@@ -111,12 +105,28 @@ void ssd1306_run (void)
             break;
 
         case ssd1306_table_init_display:
-            ssd1306_process_init_display();
+            process_init_display();
             break;
     }
 }
 
-static void ssd1306_process_init_display(void)
+static ssd1306_state_t get_internal_state(void)
+{
+    ssd1306_state_t state = ssd1306_error;
+
+    switch (self.processing_table)
+    {
+        case ssd1306_table_none:
+            state = ssd1306_idle;
+            break;
+        case ssd1306_table_init_display:
+            state = ssd1306_busy;
+            break;
+    }
+    return state;
+}
+
+static void process_init_display(void)
 {
     switch(self.processing_step)
     {
@@ -141,16 +151,34 @@ static void ssd1306_process_init_display(void)
             self.processing_step = ssd1306_init_display_set_com_pins_hardware_configuration;
             break;
         case ssd1306_init_display_set_com_pins_hardware_configuration:
+            ssd1306_set_com_pins_hardware_config(SSD1306_DEFAULT_COM_HW_PIN_USE_ALT_COM_PIN_CONF,
+                                                 SSD1306_DEFAULT_COM_HW_PIN_EN_LEFT_RIGHT_REMAP);
+            self.processing_step = ssd1306_init_display_set_contrast;
             break;
         case ssd1306_init_display_set_contrast:
+            ssd1306_set_contrast(SSD1306_DEFAULT_CONTRAST);
+            self.processing_step = ssd1306_init_display_set_use_pixels_from_ram;
             break;
-        case ssd1306_init_display_display_sleep:
+        case ssd1306_init_display_set_use_pixels_from_ram:
+            ssd1306_set_pixels_from_RAM();
+            self.processing_step = ssd1306_init_display_set_normal_display;
+            break;
+        case ssd1306_init_display_set_normal_display:
+            ssd1306_set_normal_display();
+            self.processing_step = ssd1306_init_display_set_clock_divider_and_oscillator;
             break;
         case ssd1306_init_display_set_clock_divider_and_oscillator:
+            ssd1306_set_display_clock(SSD1306_DEFAULT_DISPLAY_CLOCK_DIVIDE_RATIO,
+                                      SSD1306_DEFAULT_OSCILLATOR_FREQUENCY);
+            self.processing_step = ssd1306_init_display_charge_pump_setting;
             break;
         case ssd1306_init_display_charge_pump_setting:
+            ssd1306_enable_charge_pump();
+            self.processing_step = ssd1306_init_display_display_on;
             break;
         case ssd1306_init_display_display_on:
+            ssd1306_set_display_on();
+            self.processing_table = ssd1306_table_none;
             break;
     }
 }
@@ -170,6 +198,34 @@ void ssd1306_set_contrast(uint8_t level)
     self.buffer[1] = SSD1306_SET_CONTRAST;
     self.buffer[2] = level;
     ssd1306_i2c_write (self.buffer, 3);
+}
+
+void ssd1306_set_pixels_from_RAM(void)
+{
+    self.buffer[0] = SSD1306_COMMAND_SINGLE;
+    self.buffer[1] = SSD1306_SET_USE_PIXELS_FROM_RAM;
+    ssd1306_i2c_write (self.buffer, 2);
+}
+
+void ssd1306_set_pixels_entire_display_on(void)
+{
+    self.buffer[0] = SSD1306_COMMAND_SINGLE;
+    self.buffer[1] = SSD1306_SET_PIXELS_ENTIRE_DISPLAY_ON;
+    ssd1306_i2c_write (self.buffer, 2);
+}
+
+void ssd1306_set_normal_display(void)
+{
+    self.buffer[0] = SSD1306_COMMAND_SINGLE;
+    self.buffer[1] = SSD1306_SET_NORMAL_DISPLAY;
+    ssd1306_i2c_write (self.buffer, 2);
+}
+
+void ssd1306_set_inverted_display(void)
+{
+    self.buffer[0] = SSD1306_COMMAND_SINGLE;
+    self.buffer[1] = SSD1306_SET_INVERTED_DISPLAY;
+    ssd1306_i2c_write (self.buffer, 2);
 }
 
 void ssd1306_set_display_on(void)
@@ -248,7 +304,7 @@ void ssd1306_set_com_output_scan_direction_remapped(void)
 
 void ssd1306_set_display_offset (uint8_t offset)
 {
-    if (offset < 64)
+    if (offset <= SSD1306_DISPLAY_OFFSET_MAX_VALUE)
     {
         self.buffer[0] = SSD1306_COMMAND_SINGLE;
         self.buffer[1] = SSD1306_SET_DISPLAY_OFFSET;
@@ -257,10 +313,51 @@ void ssd1306_set_display_offset (uint8_t offset)
     }
 }
 
+void ssd1306_set_com_pins_hardware_config(bool use_alt_com_pin_conf,
+                                          bool enable_left_right_remap)
+{
+    self.buffer[0] = SSD1306_COMMAND_SINGLE;
+    self.buffer[1] = SSD1306_SET_COM_PINS_HARDWARE_CONFIGURATION;
+    self.buffer[2] = SSD1306_COM_PINS_HARDWARE_BASE_VALUE |
+                     ((uint8_t)use_alt_com_pin_conf) << 4 |
+                     ((uint8_t)enable_left_right_remap) << 5;
+    ssd1306_i2c_write (self.buffer, 3);
+}
+
 /*
  * Timing and Driving Scheme Setting commands
  */
+void ssd1306_set_display_clock(uint8_t divide_ratio, uint8_t oscillator_frequency)
+{
+    if ((divide_ratio >= SSD1306_CLOCK_DIVIDER_MIN_VALUE) &&
+        (divide_ratio <= SSD1306_CLOCK_DIVIDER_MAX_VALUE) &&
+        (oscillator_frequency <= SSD1306_OSCILLATOR_FREQUENCY_MAX_VALUE))
+    {
+        self.buffer[0] = SSD1306_COMMAND_SINGLE;
+        self.buffer[1] = SSD1306_SET_CLOCK_DIVIDER_AND_OSCILLATOR;
+        self.buffer[2] = (divide_ratio-1) | (oscillator_frequency << 4);
+        ssd1306_i2c_write (self.buffer, 3);
+    }
+}
 
+/*
+ * CHARGE PUMP REGULATOR COMMANDS
+ */
+void ssd1306_enable_charge_pump(void)
+{
+    self.buffer[0] = SSD1306_COMMAND_SINGLE;
+    self.buffer[1] = SSD1306_CHARGE_PUMP_SETTING;
+    self.buffer[2] = SSD1306_CHARGE_PUMP_ENABLE;
+    ssd1306_i2c_write (self.buffer, 3);
+}
+
+void ssd1306_disable_charge_pump(void)
+{
+    self.buffer[0] = SSD1306_COMMAND_SINGLE;
+    self.buffer[1] = SSD1306_CHARGE_PUMP_SETTING;
+    self.buffer[2] = SSD1306_CHARGE_PUMP_DISABLE;
+    ssd1306_i2c_write (self.buffer, 3);
+}
 
 /*
  * DATA SEND

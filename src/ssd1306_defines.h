@@ -21,6 +21,8 @@
  * Fundamental commands
  */
 #define SSD1306_SET_CONTRAST                              0x81
+#define SSD1306_SET_USE_PIXELS_FROM_RAM                   0xA4
+#define SSD1306_SET_PIXELS_ENTIRE_DISPLAY_ON              0xA5
 #define SSD1306_SET_NORMAL_DISPLAY                        0xA6
 #define SSD1306_SET_INVERTED_DISPLAY                      0xA7
 #define SSD1306_DISPLAY_ON                                0xAF
@@ -47,12 +49,17 @@
 #define SSD1306_SET_COM_OUTPUT_SCAN_DIRECTION_NORMAL      0xC0
 #define SSD1306_SET_COM_OUTPUT_SCAN_DIRECTION_REMAPPED    0xC8
 #define SSD1306_SET_DISPLAY_OFFSET                        0xD3
+#define SSD1306_DISPLAY_OFFSET_MAX_VALUE                  0x3F
 #define SSD1306_SET_COM_PINS_HARDWARE_CONFIGURATION       0xDA
+#define SSD1306_COM_PINS_HARDWARE_BASE_VALUE              0x02
 
 /*
  * Timing and driving scheme settings commands
  */
 #define SSD1306_SET_CLOCK_DIVIDER_AND_OSCILLATOR          0xD5
+#define SSD1306_CLOCK_DIVIDER_MIN_VALUE                   0x01
+#define SSD1306_CLOCK_DIVIDER_MAX_VALUE                   0x10
+#define SSD1306_OSCILLATOR_FREQUENCY_MAX_VALUE            0x0F
 
 /*
  * Charge pump commands

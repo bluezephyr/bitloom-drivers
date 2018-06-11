@@ -72,8 +72,6 @@ static const char* get_string(operation_t operation);
  */
 static const char* string_operation_i2c_write      = "I2C write";
 static const char* string_operation_i2c_write_reg  = "I2C write register";
-//static const char* string_expected                 = "Expected";
-//static const char* string_actual                   = "Actual";
 static const char* string_operation_unknown        = "unknown string";
 static const char* string_too_many_operations      = "Too many operations";
 
@@ -162,7 +160,6 @@ i2c_master_state_t i2c_master_get_state (void)
         return i2c_busy;
     }
 }
-
 
 /*
  * Help functions

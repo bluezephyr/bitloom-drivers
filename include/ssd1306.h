@@ -12,7 +12,8 @@
 #ifndef SSD1306_H
 #define SSD1306_H
 
-#include "ssd1306_config.h"
+#include <stdint.h>
+#include <stdbool.h>
 
 /*
  * Current state of the SSD1306 driver
@@ -32,7 +33,7 @@ typedef enum
  * The init function must be called before any other function in the driver is
  * called.
  */
-void ssd1306_init (uint8_t taskid);
+void ssd1306_init(uint8_t taskid);
 
 /*
  * Returns the status of the driver.  The function will also check the
@@ -44,7 +45,7 @@ ssd1306_state_t ssd1306_get_state(void);
  * Function to run the SSD1306 task.  This function must be executes to service
  * the multi step commands of the driver.
  */
-void ssd1306_run (void);
+void ssd1306_run(void);
 
 /*
  * COMMANDS
@@ -53,9 +54,7 @@ void ssd1306_run (void);
  * sure that the state is idle before any command functions are used.
  */
 
-/*
- * MULTI STEP COMMANDS
- *
+/**** MULTI STEP COMMANDS ****
  * The following commands require that the run function is executed in order
  * for the command to be processed.
  */
@@ -69,13 +68,11 @@ void ssd1306_run (void);
  */
 void ssd1306_init_display(void);
 
-/*
- * SIMPLE COMMANDS
- *
- */
+
+/**** SINGLE STEP COMMANDS ****/
 
 /*
- * Fundamental commands
+ * FUNDAMENTAL COMMANDS
  */
 
 /*
@@ -85,22 +82,38 @@ void ssd1306_init_display(void);
 void ssd1306_set_contrast(uint8_t level);
 
 /*
+ * Select if the pixels are set based on the contents of the display's internal
+ * RAM or if all pixels on the display shall be turned on regardless on the RAM
+ * contents.
+ * Default value is to base on RAM
+ */
+void ssd1306_set_pixels_from_RAM(void);
+void ssd1306_set_pixels_entire_display_on(void);
+
+/*
+ * Set normal or inverted display.
+ * Default value is normal.
+ */
+void ssd1306_set_normal_display(void);
+void ssd1306_set_inverted_display(void);
+
+/*
  * Turn the OLED panel display on or put it in sleep mode.
  * Default value is sleep mode.
  */
-void ssd1306_set_display_on (void);
-void ssd1306_set_display_sleep (void);
+void ssd1306_set_display_on(void);
+void ssd1306_set_display_sleep(void);
 
 /*
- * Scrolling commands
+ * SCROLLING COMMANDS
  */
 
 /*
- * Addressing setting commands
+ * ADDRESSING SETTING COMMANDS
  */
 
 /*
- * Hardware configuration commands
+ * HARDWARE CONFIGURATION COMMANDS
  */
 
 /*
@@ -134,16 +147,60 @@ void ssd1306_set_com_output_scan_direction_remapped(void);
  * Set vertical shift from 0-63 (decimal).
  * Default value is 0.
  */
-void ssd1306_set_display_offset (uint8_t offset);
+void ssd1306_set_display_offset(uint8_t offset);
+
+/*
+ * Specify COM pins hardware configuration.
+ *
+ * use_alt_com_pin_conf parameter:
+ *   Use alternative COM pin configuration (true) or
+ *   use sequential COM pin configuration (false)
+ *   Default value is true
+ *
+ * enable_left_right_remap parameter:
+ *   Disable COM Left/Right remap (false) or
+ *   Enable COM Left/Right remap (true)
+ *   Default value is false.
+ */
+void ssd1306_set_com_pins_hardware_config(bool use_alt_com_pin_conf,
+                                          bool enable_left_right_remap);
 
 
 /*
- * Timing and Driving Scheme Setting commands
+ * TIMING AND DRIVING SCHEME SETTING COMMANDS
  */
 
 /*
- * DATA SEND
+ * Display clock settings.
  *
+ * divide_ratio parameter:
+ *   Divide ratio is from 1 to 16.
+ *   Default value is 1.
+ *
+ * oscillator_frequency parameter:
+ *   The oscillator frewuency is a value between 0 and 15 (decimal)
+ *   Higher value on this parameter gives higher frequency
+ *   Default value is 8.
+ */
+void ssd1306_set_display_clock(uint8_t divide_ratio, uint8_t oscillator_frequency);
+
+/*
+ * CHARGE PUMP REGULATOR COMMANDS
+ */
+
+/*
+ * The charge pump must be enabled with the following sequence:
+ *  ssd1306_enable_charge_pump();
+ *  ssd1306_set_display_on();
+ * The charge pump is disabled by default.
+ */
+void ssd1306_enable_charge_pump(void);
+void ssd1306_disable_charge_pump(void);
+
+
+/**** DATA SEND COMMAND ****/
+
+/*
  * The function will send the specified graphics data to the OLED panel using
  * the communication bus.  The buffer and its contents must not be modified
  * until the state is idle.
