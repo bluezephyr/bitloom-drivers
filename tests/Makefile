@@ -19,7 +19,7 @@ SRC    := test_main.c \
 INC    := include \
 	  tests/config \
 	  tests/mocks \
-	  src \
+	  src/ssd1306 \
 
 
 # Include directories (absolute paths)
@@ -37,9 +37,10 @@ endif
 UNITY_I	:= $(UNITY_HOME)/src \
 	   $(UNITY_HOME)/extras/fixture/src \
 	   $(UNITY_HOME)/extras/fixture/test \
+	   $(UNITY_HOME)/extras/memory/src \
 
 # Unity source
-UNITY_S := unity.c unity_fixture.c
+UNITY_S := unity.c unity_fixture.c unity_memory.c
 
 #-----------------------------------------------------------------------------#
 #			MAKEFILE CORE
@@ -61,9 +62,10 @@ all: 	test
 
 VPATH = $(UNITY_HOME)/src \
        	$(UNITY_HOME)/extras/fixture/src \
+       	$(UNITY_HOME)/extras/memory/src \
 	ssd1306 \
 	mocks \
-	../src \
+	../src/ssd1306 \
 
 $(NAME) : $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)

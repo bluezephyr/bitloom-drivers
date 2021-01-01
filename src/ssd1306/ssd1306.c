@@ -17,7 +17,7 @@
 /*
  * Com functions - to be moved to separate module
  */
-#include "i2c_master.h"
+#include "core/i2c_master.h"
 void ssd1306_i2c_write(uint8_t* buffer, uint8_t len);
 void ssd1306_i2c_write_register(uint8_t reg, uint8_t* buffer, uint8_t len);
 /* End Com functions */

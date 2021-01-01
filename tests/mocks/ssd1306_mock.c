@@ -16,7 +16,7 @@
 #include <string.h>
 #include "ssd1306_mock.h"
 #include "unity_fixture.h"
-#include "i2c_master.h"
+#include "core/i2c_master.h"
 
 #define MAX_EXPECTATIONS 100
 #define MAX_DATA_LEN 100
