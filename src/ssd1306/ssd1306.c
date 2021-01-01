@@ -1,23 +1,24 @@
 /*
- * Bitloom driver for the SSD1306 display.
+ * BitLoom driver for the SSD1306 display.
  *
  * This module implements a driver for the SSD1306 display chip.
  *
- * Copyright (c) 2016-2018. BlueZephyr
+ * Copyright (c) 2016-2021. BlueZephyr
  *
  * This software may be modified and distributed under the terms
  * of the MIT license.  See the LICENSE file for details.
  *
  */
+
+#include <stdio.h>
 #include "ssd1306.h"
 #include "ssd1306_defines.h"
-#include "ssd1306_config.h"
-#include <stdio.h>
+#include "config/ssd1306_config.h"
 
 /*
  * Com functions - to be moved to separate module
  */
-#include "core/i2c_master.h"
+#include "hal/i2c.h"
 void ssd1306_i2c_write(uint8_t* buffer, uint8_t len);
 void ssd1306_i2c_write_register(uint8_t reg, uint8_t* buffer, uint8_t len);
 /* End Com functions */
@@ -74,29 +75,29 @@ ssd1306_state_t ssd1306_get_state(void)
 {
     ssd1306_state_t state = ssd1306_error;
 
-    switch (i2c_master_get_state())
-    {
-        case i2c_idle:
-            state = get_internal_state();
-            break;
-
-        case i2c_busy:
-            state = ssd1306_busy;
-            break;
-
-        case i2c_error:
-            state = ssd1306_error;
-            break;
-    }
+//    switch (i2c_master_get_state())
+//    {
+//        case i2c_idle:
+//            state = get_internal_state();
+//            break;
+//
+//        case i2c_busy:
+//            state = ssd1306_busy;
+//            break;
+//
+//        case i2c_error:
+//            state = ssd1306_error;
+//            break;
+//    }
     return state;
 }
 
 void ssd1306_run (void)
 {
-    if (i2c_master_get_state() != i2c_idle)
-    {
-        return;
-    }
+//    if (i2c_master_get_state() != i2c_idle)
+//    {
+//        return;
+//    }
 
     switch(self.processing_table)
     {
@@ -364,7 +365,7 @@ void ssd1306_disable_charge_pump(void)
  */
 void ssd1306_send_graphics_data(uint8_t* buffer, uint16_t len)
 {
-    ssd1306_i2c_write_register(SSD1306_DATA_STREAM, buffer, len);
+    //ssd1306_i2c_write_register(SSD1306_DATA_STREAM, buffer, len);
 }
 
 /*
@@ -372,10 +373,10 @@ void ssd1306_send_graphics_data(uint8_t* buffer, uint16_t len)
  */
 void ssd1306_i2c_write(uint8_t* buffer, uint8_t len)
 {
-    i2c_master_write(SSD1306_I2C_SLAVE_ADDRESS, buffer, len);
+    //i2c_master_write(SSD1306_I2C_SLAVE_ADDRESS, buffer, len);
 }
 
 void ssd1306_i2c_write_register(uint8_t reg, uint8_t* buffer, uint8_t len)
 {
-    i2c_master_write_register(SSD1306_I2C_SLAVE_ADDRESS, reg, buffer, len);
+    //i2c_master_write_register(SSD1306_I2C_SLAVE_ADDRESS, reg, buffer, len);
 }
