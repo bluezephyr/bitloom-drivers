@@ -27,7 +27,17 @@ void ssd1306_i2c_write_register(uint8_t reg, uint8_t* buffer, uint8_t len);
  * Local function prototypes
  */
 static void process_init_display(void);
-static ssd1306_state_t get_internal_state(void);
+//static enum ssd1306_state_t get_internal_state(void);
+
+/*
+ * Internal state of the driver
+ */
+enum ssd1306_state_t
+{
+    ssd1306_idle,
+    ssd1306_busy,
+    ssd1306_error
+};
 
 /*
  * Processing tables are used to manage multi step commands.
@@ -55,25 +65,29 @@ typedef enum
 } ssd1306_init_display_processing_steps_t;
 
 /*
- * SSD1306 class (singleton)
+ * SSD1306 instance
  */
-typedef struct
+struct ssd1306_t
 {
+    uint8_t taskId;
+    enum ssd1306_state_t state;
+    enum ssd1306_result_t *result;
     ssd1306_processing_table_t processing_table;
     uint8_t processing_step;
     uint8_t buffer[SSD1306_COMMAND_BUFFER_LEN];
-} ssd1306_t;
-static ssd1306_t self;
+    enum i2c_op_result_t i2cOpResult;
+} self;
 
-void ssd1306_init (uint8_t taskid)
+void ssd1306_init (uint8_t taskId)
 {
+    self.taskId = taskId;
     self.processing_table = ssd1306_table_none;
     self.processing_step = 0;
 }
 
-ssd1306_state_t ssd1306_get_state(void)
+enum ssd1306_state_t ssd1306_get_state(void)
 {
-    ssd1306_state_t state = ssd1306_error;
+    enum ssd1306_state_t state = ssd1306_error;
 
 //    switch (i2c_master_get_state())
 //    {
@@ -94,26 +108,35 @@ ssd1306_state_t ssd1306_get_state(void)
 
 void ssd1306_run (void)
 {
+    if (self.state == ssd1306_busy)
+    {
+        if (self.i2cOpResult == i2c_operation_ok)
+        {
+            *self.result = ssd1306_result_ok;
+            self.state = ssd1306_idle;
+        }
+
 //    if (i2c_master_get_state() != i2c_idle)
 //    {
 //        return;
 //    }
 
-    switch(self.processing_table)
-    {
-        case ssd1306_table_none:
-            // Nothing to do
-            break;
+        switch (self.processing_table)
+        {
+            case ssd1306_table_none:
+                // Nothing to do
+                break;
 
-        case ssd1306_table_init_display:
-            process_init_display();
-            break;
+            case ssd1306_table_init_display:
+                process_init_display();
+                break;
+        }
     }
 }
 
-static ssd1306_state_t get_internal_state(void)
+static enum ssd1306_state_t get_internal_state(void)
 {
-    ssd1306_state_t state = ssd1306_error;
+    enum ssd1306_state_t state = ssd1306_error;
 
     switch (self.processing_table)
     {
@@ -129,6 +152,8 @@ static ssd1306_state_t get_internal_state(void)
 
 static void process_init_display(void)
 {
+    enum ssd1306_result_t result;
+
     switch(self.processing_step)
     {
         case ssd1306_init_display_set_set_mux:
@@ -157,15 +182,15 @@ static void process_init_display(void)
             self.processing_step = ssd1306_init_display_set_contrast;
             break;
         case ssd1306_init_display_set_contrast:
-            ssd1306_set_contrast(SSD1306_DEFAULT_CONTRAST);
+            ssd1306_set_contrast(&result, SSD1306_DEFAULT_CONTRAST);
             self.processing_step = ssd1306_init_display_set_use_pixels_from_ram;
             break;
         case ssd1306_init_display_set_use_pixels_from_ram:
-            ssd1306_set_pixels_from_RAM();
+            ssd1306_setPixelsFromRAM(&result);
             self.processing_step = ssd1306_init_display_set_normal_display;
             break;
         case ssd1306_init_display_set_normal_display:
-            ssd1306_set_normal_display();
+            ssd1306_setNormalDisplay(&result);
             self.processing_step = ssd1306_init_display_set_clock_divider_and_oscillator;
             break;
         case ssd1306_init_display_set_clock_divider_and_oscillator:
@@ -178,13 +203,13 @@ static void process_init_display(void)
             self.processing_step = ssd1306_init_display_display_on;
             break;
         case ssd1306_init_display_display_on:
-            ssd1306_set_display_on();
+            ssd1306_setDisplayOn(&result);
             self.processing_table = ssd1306_table_none;
             break;
     }
 }
 
-void ssd1306_init_display(void)
+void ssd1306_initDisplay(enum ssd1306_result_t *result)
 {
     self.processing_table = ssd1306_table_init_display;
     self.processing_step = ssd1306_init_display_set_set_mux;
@@ -193,7 +218,7 @@ void ssd1306_init_display(void)
 /*
  * Fundamental commands
  */
-void ssd1306_set_contrast(uint8_t level)
+void ssd1306_set_contrast(enum ssd1306_result_t *result, uint8_t level)
 {
     self.buffer[0] = SSD1306_COMMAND_SINGLE;
     self.buffer[1] = SSD1306_SET_CONTRAST;
@@ -201,42 +226,45 @@ void ssd1306_set_contrast(uint8_t level)
     ssd1306_i2c_write (self.buffer, 3);
 }
 
-void ssd1306_set_pixels_from_RAM(void)
+void ssd1306_setPixelsFromRAM (enum ssd1306_result_t *result)
 {
-    self.buffer[0] = SSD1306_COMMAND_SINGLE;
-    self.buffer[1] = SSD1306_SET_USE_PIXELS_FROM_RAM;
-    ssd1306_i2c_write (self.buffer, 2);
+    self.buffer[0] = SSD1306_SET_USE_PIXELS_FROM_RAM;
+    i2c_write_register(SSD1306_I2C_SLAVE_ADDRESS, SSD1306_COMMAND_SINGLE,
+                       self.buffer, 1, &self.i2cOpResult);
+    self.result = result;
+    *self.result = ssd1306_result_busy;
+    self.state = ssd1306_busy;
 }
 
-void ssd1306_set_pixels_entire_display_on(void)
+void ssd1306_setAllPixels (enum ssd1306_result_t *result)
 {
     self.buffer[0] = SSD1306_COMMAND_SINGLE;
     self.buffer[1] = SSD1306_SET_PIXELS_ENTIRE_DISPLAY_ON;
     ssd1306_i2c_write (self.buffer, 2);
 }
 
-void ssd1306_set_normal_display(void)
+void ssd1306_setNormalDisplay(enum ssd1306_result_t *result)
 {
     self.buffer[0] = SSD1306_COMMAND_SINGLE;
     self.buffer[1] = SSD1306_SET_NORMAL_DISPLAY;
     ssd1306_i2c_write (self.buffer, 2);
 }
 
-void ssd1306_set_inverted_display(void)
+void ssd1306_setInvertedDisplay (enum ssd1306_result_t *result)
 {
     self.buffer[0] = SSD1306_COMMAND_SINGLE;
     self.buffer[1] = SSD1306_SET_INVERTED_DISPLAY;
     ssd1306_i2c_write (self.buffer, 2);
 }
 
-void ssd1306_set_display_on(void)
+void ssd1306_setDisplayOn (enum ssd1306_result_t *result)
 {
     self.buffer[0] = SSD1306_COMMAND_SINGLE;
     self.buffer[1] = SSD1306_DISPLAY_ON;
     ssd1306_i2c_write (self.buffer, 2);
 }
 
-void ssd1306_set_display_sleep(void)
+void ssd1306_setDisplaySleep (enum ssd1306_result_t *result)
 {
     self.buffer[0] = SSD1306_COMMAND_SINGLE;
     self.buffer[1] = SSD1306_DISPLAY_SLEEP;

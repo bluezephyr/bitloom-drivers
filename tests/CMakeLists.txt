@@ -23,6 +23,7 @@ target_link_libraries(hmc5883l_test
 
 add_executable(ssd1306_test
     ssd1306/ssd1306Test.cpp
+    mocks/i2c_mock.cpp
     )
 
 target_include_directories(ssd1306_test PRIVATE ${CPPUTEST_HOME}/include)

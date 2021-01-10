@@ -1,9 +1,9 @@
 /*
- * Bitloom driver for the SSD1306 display.
+ * BitLoom driver for the SSD1306 display.
  *
  * This module implements a driver for the SSD1306 display chip.
  *
- * Copyright (c) 2016-2018. BlueZephyr
+ * Copyright (c) 2016-2021. BlueZephyr
  *
  * This software may be modified and distributed under the terms
  * of the MIT license.  See the LICENSE file for details.
@@ -15,61 +15,56 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+
 /*
- * Current state of the SSD1306 driver
+ * Result of an operation request to the SSD1306 driver
  *
- * idle:    The driver is available and ready to be used.
+ * idle:    The operation finished successfully.
  * busy:    The driver is currently performing an operation.
  * error:   The driver has encountered an error and stopped.
  */
-typedef enum
+enum ssd1306_result_t
 {
-    ssd1306_idle,
-    ssd1306_busy,
-    ssd1306_error
-} ssd1306_state_t;
+    ssd1306_result_ok = 0,
+    ssd1306_result_busy,
+    ssd1306_result_error
+};
 
 /*
  * The init function must be called before any other function in the driver is
  * called.
  */
-void ssd1306_init(uint8_t taskid);
+void ssd1306_init (uint8_t taskId);
 
 /*
  * Returns the status of the driver.  The function will also check the
- * availability of the needed resourses (i.e., the communication bus).
+ * availability of the needed resources (i.e., the communication bus).
  */
-ssd1306_state_t ssd1306_get_state(void);
+//enum ssd1306_state_t ssd1306_get_state(void);
 
 /*
- * Function to run the SSD1306 task.  This function must be executes to service
- * the multi step commands of the driver.
+ * Function to run the SSD1306 task.  This function is typically called by the
+ * scheduler in order to progress the state of the driver.
  */
-void ssd1306_run(void);
+void ssd1306_run (void);
 
 /*
  * COMMANDS
  *
- * Note! For all commands, it is the responsibility of the application to make
- * sure that the state is idle before any command functions are used.
- */
-
-/**** MULTI STEP COMMANDS ****
- * The following commands require that the run function is executed in order
- * for the command to be processed.
+ * Note! All commands are executed by calls to the run function (typically done
+ * by the scheduler). The result of the command will eventually be published
+ * in the result out-parameter.  During the processing of a command the value is
+ * ssd1306_result_busy.
  */
 
 /*
- * Function to initalize the OLED display.  The function is multi step and
- * requires the run function to be executed until the get_state function
- * returns idle.
+ * Function to initialize the OLED display. The function is multi step and
+ * requires the run function to be executed several times. The function needs
+ * to be called before actual display data can be sent to the display.
  *
- * The function uses the values in the config file to configure the diplay.
+ * The function uses the values in the config file to configure the display.
  */
-void ssd1306_init_display(void);
-
-
-/**** SINGLE STEP COMMANDS ****/
+void ssd1306_initDisplay (enum ssd1306_result_t *result);
 
 /*
  * FUNDAMENTAL COMMANDS
@@ -79,30 +74,32 @@ void ssd1306_init_display(void);
  * Set contrast level. Contrast increases as the value increases.
  * Default value is 0x7F
  */
-void ssd1306_set_contrast(uint8_t level);
+void ssd1306_set_contrast (enum ssd1306_result_t *result, uint8_t level);
 
 /*
  * Select if the pixels are set based on the contents of the display's internal
  * RAM or if all pixels on the display shall be turned on regardless on the RAM
  * contents.
+ *
  * Default value is to base on RAM
  */
-void ssd1306_set_pixels_from_RAM(void);
-void ssd1306_set_pixels_entire_display_on(void);
+void ssd1306_setPixelsFromRAM (enum ssd1306_result_t *result);
+void ssd1306_setAllPixels (enum ssd1306_result_t *result);
 
 /*
  * Set normal or inverted display.
+ *
  * Default value is normal.
  */
-void ssd1306_set_normal_display(void);
-void ssd1306_set_inverted_display(void);
+void ssd1306_setNormalDisplay (enum ssd1306_result_t *result);
+void ssd1306_setInvertedDisplay (enum ssd1306_result_t *result);
 
 /*
  * Turn the OLED panel display on or put it in sleep mode.
  * Default value is sleep mode.
  */
-void ssd1306_set_display_on(void);
-void ssd1306_set_display_sleep(void);
+void ssd1306_setDisplayOn (enum ssd1306_result_t *result);
+void ssd1306_setDisplaySleep (enum ssd1306_result_t *result);
 
 /*
  * SCROLLING COMMANDS
@@ -131,6 +128,7 @@ void ssd1306_set_segment_remap_127(void);
 
 /*
  * Set MUX ratio from 16MUX to 64MUX (decimal).
+ *
  * Default value is 64.
  */
 void ssd1306_set_multiplex_ratio(uint8_t ratio);
@@ -178,7 +176,7 @@ void ssd1306_set_com_pins_hardware_config(bool use_alt_com_pin_conf,
  *   Default value is 1.
  *
  * oscillator_frequency parameter:
- *   The oscillator frewuency is a value between 0 and 15 (decimal)
+ *   The oscillator frequency is a value between 0 and 15 (decimal)
  *   Higher value on this parameter gives higher frequency
  *   Default value is 8.
  */
