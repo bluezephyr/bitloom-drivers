@@ -28,6 +28,7 @@ add_executable(ssd1306_test
 
 target_include_directories(ssd1306_test PRIVATE ${CPPUTEST_HOME}/include)
 target_include_directories(ssd1306_test PRIVATE ${BITLOOM_DRIVERS}/include)
+target_include_directories(ssd1306_test PRIVATE ${BITLOOM_DRIVERS}/src/ssd1306)
 target_include_directories(ssd1306_test PRIVATE ${BITLOOM_CORE}/include)
 target_include_directories(ssd1306_test PRIVATE ${BITLOOM_CONFIG})
 target_include_directories(ssd1306_test PRIVATE mocks)
@@ -39,3 +40,4 @@ target_link_libraries(ssd1306_test
     )
 
 add_test(NAME hmc5883l COMMAND hmc5883l_test)
+add_test(NAME ssd1306 COMMAND ssd1306_test)

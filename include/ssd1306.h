@@ -19,13 +19,15 @@
 /*
  * Result of an operation request to the SSD1306 driver
  *
- * idle:    The operation finished successfully.
- * busy:    The driver is currently performing an operation.
- * error:   The driver has encountered an error and stopped.
+ * idle:        The operation finished successfully.
+ * processing:  The request was accepted and the operation is in progress
+ * busy:        The request was *not* accepted since the driver is currently busy.
+ * error:       The driver has encountered an error and stopped.
  */
 enum ssd1306_result_t
 {
     ssd1306_result_ok = 0,
+    ssd1306_result_processing,
     ssd1306_result_busy,
     ssd1306_result_error
 };
@@ -84,7 +86,7 @@ void ssd1306_set_contrast (enum ssd1306_result_t *result, uint8_t level);
  * Default value is to base on RAM
  */
 void ssd1306_setPixelsFromRAM (enum ssd1306_result_t *result);
-void ssd1306_setAllPixels (enum ssd1306_result_t *result);
+void ssd1306_setAllPixelsActive (enum ssd1306_result_t *result);
 
 /*
  * Set normal or inverted display.
