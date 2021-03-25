@@ -35,7 +35,7 @@ On Linux use the following sequence to run the unit tests.
     cd bitloom-drivers/build
     cmake -DBITLOOM_CORE=../bitloom-core ..
     cd bitloom-drivers/tests
-    make all test -
+    make all test
 
 Unit tests are executed on each commit by Travis CI:
 https://travis-ci.org/bluezephyr/bitloom-drivers
