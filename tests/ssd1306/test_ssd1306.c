@@ -8,6 +8,13 @@
  *
  */
 
+/*
+ * NOTE!
+ *
+ * The test cases in this file are not used anymore. Needs to be ported to CppUTest
+ * and converted to work with asynchronous implementation of the SSD1306 driver.
+ */
+
 #include <string.h>
 #include "unity_fixture.h"
 #include "ssd1306.h"
@@ -214,7 +221,7 @@ TEST(ssd1306_i2c, set_display_pixels_use_pixel_data_from_RAM)
 TEST(ssd1306_i2c, set_normal_display)
 {
     expect_i2c_command(SSD1306_SET_NORMAL_DISPLAY);
-    ssd1306_set_normal_display();
+    void ssd1306_setNormalDisplay(enum ssd1306_result_t *result);
     ssd1306_mock_verify_complete();
 }
 
@@ -399,7 +406,7 @@ TEST(ssd1306_i2c, init_display)
     expect_i2c_command_one_arg(SSD1306_CHARGE_PUMP_SETTING, SSD1306_CHARGE_PUMP_ENABLE);
     expect_i2c_command(SSD1306_DISPLAY_ON);
 
-    ssd1306_init_display();
+    void ssd1306_initDisplay(enum ssd1306_result_t *result);
     run_i2c_and_ssd_tasks(13);
     TEST_ASSERT_EQUAL_INT(ssd1306_idle, ssd1306_get_state());
     ssd1306_mock_verify_complete();

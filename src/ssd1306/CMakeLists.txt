@@ -1,6 +1,3 @@
-enable_language(C)
-set(CMAKE_C_STANDARD 99)
-
 add_library(ssd1306
     ssd1306.c
     ssd1306_defines.h)

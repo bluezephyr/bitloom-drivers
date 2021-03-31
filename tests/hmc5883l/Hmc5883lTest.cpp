@@ -60,7 +60,7 @@ TEST_GROUP(hmc5883l)
 
         // TODO: Check also value of CRA in buffer
         hmc_set_config_reg_A(cra);
-        mock().expectOneCall("i2c_write_register")
+        mock().expectOneCall("i2c_masterTransmitRegister")
                 .withParameter("address", HMC5883L_ADDRESS)
                 .withParameter("reg", HMC5883L_CONFIG_A)
                 .withParameter("length", 1)
@@ -75,7 +75,7 @@ TEST_GROUP(hmc5883l)
 
         // TODO: Check also value of CRB in buffer
         hmc_set_config_reg_B(crb);
-        mock().expectOneCall("i2c_write_register")
+        mock().expectOneCall("i2c_masterTransmitRegister")
                 .withParameter("address", HMC5883L_ADDRESS)
                 .withParameter("reg", HMC5883L_CONFIG_B)
                 .withParameter("length", 1)
@@ -89,7 +89,7 @@ TEST_GROUP(hmc5883l)
         operation_result_mode = i2c_operation_ok;
 
         // TODO: Check also value of mode in buffer
-        mock().expectOneCall("i2c_write_register")
+        mock().expectOneCall("i2c_masterTransmitRegister")
                 .withParameter("address", HMC5883L_ADDRESS)
                 .withParameter("reg", HMC5883L_MODE)
                 .withParameter("length", 1)

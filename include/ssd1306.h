@@ -1,5 +1,5 @@
 /*
- * Bitloom driver for the SSD1306 display.
+ * BitLoom driver for the SSD1306 display.
  *
  * This module implements a driver for the SSD1306 display chip.
  *
@@ -16,60 +16,45 @@
 #include <stdbool.h>
 
 /*
- * Current state of the SSD1306 driver
- *
- * idle:    The driver is available and ready to be used.
- * busy:    The driver is currently performing an operation.
- * error:   The driver has encountered an error and stopped.
+ * This driver provides a set of functions to control an SSD1306 display in an
+ * asynchronous manner. All commands will return immediately with a response code
+ * for the requested commandType. If the returned value is "ssd1306_request_ok", the
+ * the commandType will be processed and the result will be published in the "result"
+ * out parameter of the function.
  */
-typedef enum
+
+enum ssd1306_request_t
 {
-    ssd1306_idle,
-    ssd1306_busy,
-    ssd1306_error
-} ssd1306_state_t;
+    ssd1306_request_ok,
+    ssd1306_request_busy
+};
+
+enum ssd1306_result_t
+{
+    ssd1306_result_ok,
+    ssd1306_result_processing
+};
 
 /*
  * The init function must be called before any other function in the driver is
  * called.
  */
-void ssd1306_init(uint8_t taskid);
+void ssd1306_init(uint8_t taskId);
 
 /*
- * Returns the status of the driver.  The function will also check the
- * availability of the needed resourses (i.e., the communication bus).
- */
-ssd1306_state_t ssd1306_get_state(void);
-
-/*
- * Function to run the SSD1306 task.  This function must be executes to service
- * the multi step commands of the driver.
+ * Function to run the SSD1306 task. Called by the scheduler.
  */
 void ssd1306_run(void);
 
 /*
  * COMMANDS
- *
- * Note! For all commands, it is the responsibility of the application to make
- * sure that the state is idle before any command functions are used.
- */
-
-/**** MULTI STEP COMMANDS ****
- * The following commands require that the run function is executed in order
- * for the command to be processed.
  */
 
 /*
- * Function to initalize the OLED display.  The function is multi step and
- * requires the run function to be executed until the get_state function
- * returns idle.
- *
- * The function uses the values in the config file to configure the diplay.
+ * Function to initialize the OLED display. The function uses the values in the
+ * config file to configure the display.
  */
-void ssd1306_init_display(void);
-
-
-/**** SINGLE STEP COMMANDS ****/
+enum ssd1306_request_t ssd1306_initDisplay(enum ssd1306_result_t *result);
 
 /*
  * FUNDAMENTAL COMMANDS
@@ -79,7 +64,7 @@ void ssd1306_init_display(void);
  * Set contrast level. Contrast increases as the value increases.
  * Default value is 0x7F
  */
-void ssd1306_set_contrast(uint8_t level);
+enum ssd1306_request_t ssd1306_setContrast(uint8_t level, enum ssd1306_result_t *result);
 
 /*
  * Select if the pixels are set based on the contents of the display's internal
@@ -87,22 +72,22 @@ void ssd1306_set_contrast(uint8_t level);
  * contents.
  * Default value is to base on RAM
  */
-void ssd1306_set_pixels_from_RAM(void);
-void ssd1306_set_pixels_entire_display_on(void);
+enum ssd1306_request_t ssd1306_setPixelsFromRAM(enum ssd1306_result_t *result);
+enum ssd1306_request_t ssd1306_setAllPixelsActive(enum ssd1306_result_t *result);
 
 /*
  * Set normal or inverted display.
  * Default value is normal.
  */
-void ssd1306_set_normal_display(void);
-void ssd1306_set_inverted_display(void);
+enum ssd1306_request_t ssd1306_setNormalDisplay(enum ssd1306_result_t *result);
+enum ssd1306_request_t ssd1306_setInvertedDisplay(enum ssd1306_result_t *result);
 
 /*
  * Turn the OLED panel display on or put it in sleep mode.
  * Default value is sleep mode.
  */
-void ssd1306_set_display_on(void);
-void ssd1306_set_display_sleep(void);
+enum ssd1306_request_t ssd1306_setDisplayOn(enum ssd1306_result_t *result);
+enum ssd1306_request_t ssd1306_setDisplaySleep(enum ssd1306_result_t *result);
 
 /*
  * SCROLLING COMMANDS
@@ -113,6 +98,29 @@ void ssd1306_set_display_sleep(void);
  */
 
 /*
+ * Set the memory addressing mode. The value will be used when data is sent to
+ * the display. Page addressing mode is default.
+ */
+enum ssd1306_addressing_mode_t
+{
+    ssd1306_addressing_horizontal,
+    ssd1306_addressing_vertical,
+    ssd1306_addressing_page
+};
+void ssd1306_setMemoryAddressingMode(enum ssd1306_addressing_mode_t mode);
+
+/*
+ * Set the column start and end addresses. The values will be used when data is
+ * sent to the display. Note that wrapping mechanisms differ depending on which
+ * memory addressing mode that is used. Consult the data sheet for details.
+ *
+ * Column range: 0-127 (default: start=0, end=127)
+ * Page range: 0-7 (default: start=0, end=7)
+ */
+void ssd1306_setColumnAddress(uint8_t startAddress, uint8_t endAddress);
+void ssd1306_setPageAddress(uint8_t startAddress, uint8_t endAddress);
+
+/*
  * HARDWARE CONFIGURATION COMMANDS
  */
 
@@ -120,34 +128,34 @@ void ssd1306_set_display_sleep(void);
  * Set display RAM display start line register from 0-63.
  * Default value is 0.
  */
-void ssd1306_set_display_start_line(uint8_t line);
+enum ssd1306_request_t ssd1306_setDisplayStartLine(uint8_t line, enum ssd1306_result_t *result);
 
 /*
  * Set which column address that is mapped to segment 0.
  * Default value is 0.
  */
-void ssd1306_set_segment_remap_0(void);
-void ssd1306_set_segment_remap_127(void);
+enum ssd1306_request_t ssd1306_setSegmentRemap_0(enum ssd1306_result_t *result);
+enum ssd1306_request_t ssd1306_setSegmentRemap_127(enum ssd1306_result_t *result);
 
 /*
  * Set MUX ratio from 16MUX to 64MUX (decimal).
  * Default value is 64.
  */
-void ssd1306_set_multiplex_ratio(uint8_t ratio);
+enum ssd1306_request_t ssd1306_setMultiplexRatio(uint8_t ratio, enum ssd1306_result_t *result);
 
 /*
- * This command sets the scan direction of the COM output.
+ * This commandType sets the scan direction of the COM output.
  * In remapped mode; scan from COM[N-1] to COM0, where N is the Multiplex ratio.
  * Default value is normal.
  */
-void ssd1306_set_com_output_scan_direction_normal(void);
-void ssd1306_set_com_output_scan_direction_remapped(void);
+enum ssd1306_request_t ssd1306_setComOutputScanDirectionNormal(enum ssd1306_result_t *result);
+enum ssd1306_request_t ssd1306_setComOutputScanDirectionRemapped(enum ssd1306_result_t *result);
 
 /*
  * Set vertical shift from 0-63 (decimal).
  * Default value is 0.
  */
-void ssd1306_set_display_offset(uint8_t offset);
+enum ssd1306_request_t ssd1306_setDisplayOffset(uint8_t offset, enum ssd1306_result_t *result);
 
 /*
  * Specify COM pins hardware configuration.
@@ -162,8 +170,7 @@ void ssd1306_set_display_offset(uint8_t offset);
  *   Enable COM Left/Right remap (true)
  *   Default value is false.
  */
-void ssd1306_set_com_pins_hardware_config(bool use_alt_com_pin_conf,
-                                          bool enable_left_right_remap);
+enum ssd1306_request_t ssd1306_setComPinsHardwareConfig(bool useAltComPinConf, bool enableLeftRightRemap, enum ssd1306_result_t *result);
 
 
 /*
@@ -178,11 +185,11 @@ void ssd1306_set_com_pins_hardware_config(bool use_alt_com_pin_conf,
  *   Default value is 1.
  *
  * oscillator_frequency parameter:
- *   The oscillator frewuency is a value between 0 and 15 (decimal)
+ *   The oscillator frequency is a value between 0 and 15 (decimal)
  *   Higher value on this parameter gives higher frequency
  *   Default value is 8.
  */
-void ssd1306_set_display_clock(uint8_t divide_ratio, uint8_t oscillator_frequency);
+enum ssd1306_request_t ssd1306_setDisplayClock(uint8_t divideRatio, uint8_t oscillatorFrequency, enum ssd1306_result_t *result);
 
 /*
  * CHARGE PUMP REGULATOR COMMANDS
@@ -190,21 +197,24 @@ void ssd1306_set_display_clock(uint8_t divide_ratio, uint8_t oscillator_frequenc
 
 /*
  * The charge pump must be enabled with the following sequence:
- *  ssd1306_enable_charge_pump();
- *  ssd1306_set_display_on();
+ *  ssd1306_enableChargePump();
+ *  ssd1306_setDisplayOn();
  * The charge pump is disabled by default.
  */
-void ssd1306_enable_charge_pump(void);
-void ssd1306_disable_charge_pump(void);
+enum ssd1306_request_t ssd1306_enableChargePump(enum ssd1306_result_t *result);
+enum ssd1306_request_t ssd1306_disableChargePump(enum ssd1306_result_t *result);
 
 
 /**** DATA SEND COMMAND ****/
-
 /*
- * The function will send the specified graphics data to the OLED panel using
- * the communication bus.  The buffer and its contents must not be modified
- * until the state is idle.
+ * The function will set the starting page and column and then send the specified
+ * graphics data to the OLED panel using the communication bus. The commandBuffer and
+ * its contents must not be modified until the result output parameter is set to
+ * ssd1306_result_ok.
+ *
+ * Note that the function will use the configured addressing mode including start/end
+ * page and start/end column.
  */
-void ssd1306_send_graphics_data(uint8_t* buffer, uint16_t len);
+enum ssd1306_request_t ssd1306_sendGraphicsData(uint8_t *buffer, uint16_t len, enum ssd1306_result_t *result);
 
 #endif // SSD1306_H

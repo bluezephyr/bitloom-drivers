@@ -110,8 +110,8 @@ void hmc_task_run(void)
             return;
         case hmc_state_send_cra:
             self.i2c_buffer[0] = self.cra;
-            if (i2c_write_register(HMC5883L_ADDRESS, HMC5883L_CONFIG_A,
-                                   self.i2c_buffer, 1, &self.i2cResult) == i2c_request_ok)
+            if (i2c_masterTransmitRegister(HMC5883L_ADDRESS, HMC5883L_CONFIG_A, self.i2c_buffer,
+                                           1, &self.i2cResult) == i2c_request_ok)
             {
                 self.state = hmc_state_wait_send_cra_done;
             }
@@ -124,8 +124,8 @@ void hmc_task_run(void)
             break;
         case hmc_state_send_crb:
             self.i2c_buffer[0] = self.crb;
-            if (i2c_write_register(HMC5883L_ADDRESS, HMC5883L_CONFIG_B,
-                                   self.i2c_buffer, 1, &self.i2cResult) == i2c_request_ok)
+            if (i2c_masterTransmitRegister(HMC5883L_ADDRESS, HMC5883L_CONFIG_B, self.i2c_buffer,
+                                           1, &self.i2cResult) == i2c_request_ok)
             {
                 self.state = hmc_state_wait_send_crb_done;
             }
@@ -138,8 +138,8 @@ void hmc_task_run(void)
             break;
         case hmc_state_send_single_measurement_mode:
             self.i2c_buffer[0] = (1 << MD1);
-            if (i2c_write_register(HMC5883L_ADDRESS, HMC5883L_MODE, self.i2c_buffer, 1,
-                                   &self.i2cResult) == i2c_request_ok)
+            if (i2c_masterTransmitRegister(HMC5883L_ADDRESS, HMC5883L_MODE, self.i2c_buffer,
+                                           1, &self.i2cResult) == i2c_request_ok)
             {
                 self.state = hmc_state_wait_send_single_measurement_mode;
             }

@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.12)
 project(bitloom_drivers)
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_CXX_STANDARD 11)
 
 # BITLOOM_CORE must be set to where the bitloom-core repo is located
 if (BITLOOM_CORE)

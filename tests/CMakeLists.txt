@@ -3,6 +3,7 @@ find_library(CPPUTESTLIB NAMES CppUTest HINTS ${CPPUTEST_HOME}/cpputest_build/li
 find_library(CPPUTESTEXTLIB NAMES CppUTestExt HINTS ${CPPUTEST_HOME}/cpputest_build/lib)
 message("CppUTest lib: ${CPPUTESTLIB}")
 message("CppUTestExt lib: ${CPPUTESTEXTLIB}")
+message(${BITLOOM_CORE})
 
 add_executable(hmc5883l_test
     hmc5883l/Hmc5883lTest.cpp
@@ -23,10 +24,12 @@ target_link_libraries(hmc5883l_test
 
 add_executable(ssd1306_test
     ssd1306/ssd1306Test.cpp
+    mocks/i2c_mock.cpp
     )
 
 target_include_directories(ssd1306_test PRIVATE ${CPPUTEST_HOME}/include)
 target_include_directories(ssd1306_test PRIVATE ${BITLOOM_DRIVERS}/include)
+target_include_directories(ssd1306_test PRIVATE ${BITLOOM_DRIVERS}/src/ssd1306)
 target_include_directories(ssd1306_test PRIVATE ${BITLOOM_CORE}/include)
 target_include_directories(ssd1306_test PRIVATE ${BITLOOM_CONFIG})
 target_include_directories(ssd1306_test PRIVATE mocks)
@@ -38,3 +41,4 @@ target_link_libraries(ssd1306_test
     )
 
 add_test(NAME hmc5883l COMMAND hmc5883l_test)
+add_test(NAME ssd1306 COMMAND ssd1306_test)

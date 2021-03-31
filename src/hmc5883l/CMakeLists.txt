@@ -1,6 +1,3 @@
-enable_language(C)
-set(CMAKE_C_STANDARD 99)
-
 add_library(hmc5883l
     hmc5883l.c
     )
